@@ -1,0 +1,6 @@
+{
+  "name": "প্রস্তুতি ঢাবি - Prostuti DHABI",
+  "description": "ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য সেরা প্রস্তুতি নিশ্চিত করতে বাংলা এডটেক প্ল্যাটফর্ম।",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
