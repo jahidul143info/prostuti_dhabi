@@ -671,26 +671,59 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
   if (supabaseClient) {
     try {
-      const { error } = await supabaseClient.from("admin_config").update({
-        facebook_url: updatedConfig.facebook_url,
-        youtube_url: updatedConfig.youtube_url,
-        whatsapp_number: updatedConfig.whatsapp_number,
-        bkash_number: updatedConfig.bkash_number,
-        nagad_number: updatedConfig.nagad_number,
-        about_text: updatedConfig.about_text,
-        about_mission: updatedConfig.about_mission,
-        password_hash: updatedConfig.password_hash
-      }).eq("id", db.admin_config.id || "config-default");
-
-      if (!error) {
-        console.log("Supabase settings successfully synced.");
+      // First, get the single config row to find its true ID in Supabase
+      const { data: dbRow, error: fetchErr } = await supabaseClient.from("admin_config").select("id").maybeSingle();
+      if (fetchErr) {
+        console.error("Supabase fetch error during settings save:", fetchErr);
+        return res.status(400).json({ error: `Supabase থেকে ডেটা পড়তে ব্যর্থ: ${fetchErr.message}` });
       }
-    } catch (_) {}
+
+      if (!dbRow) {
+        // If no row exists at all in Supabase yet, insert it!
+        const insertRecord = {
+          facebook_url: updatedConfig.facebook_url,
+          youtube_url: updatedConfig.youtube_url,
+          whatsapp_number: updatedConfig.whatsapp_number,
+          bkash_number: updatedConfig.bkash_number,
+          nagad_number: updatedConfig.nagad_number,
+          about_text: updatedConfig.about_text,
+          about_mission: updatedConfig.about_mission,
+          password_hash: updatedConfig.password_hash
+        };
+        const { error: insertErr } = await supabaseClient.from("admin_config").insert(insertRecord);
+        if (insertErr) {
+          console.error("Supabase insert error during settings save:", insertErr);
+          return res.status(400).json({ error: `Supabase-এ নতুন কনফিগারেশন তৈরি করতে ব্যর্থ: ${insertErr.message}` });
+        }
+      } else {
+        // If it exists, update it with the found ID
+        const { error: updateErr } = await supabaseClient.from("admin_config").update({
+          facebook_url: updatedConfig.facebook_url,
+          youtube_url: updatedConfig.youtube_url,
+          whatsapp_number: updatedConfig.whatsapp_number,
+          bkash_number: updatedConfig.bkash_number,
+          nagad_number: updatedConfig.nagad_number,
+          about_text: updatedConfig.about_text,
+          about_mission: updatedConfig.about_mission,
+          password_hash: updatedConfig.password_hash
+        }).eq("id", dbRow.id);
+
+        if (updateErr) {
+          console.error("Supabase update error during settings save:", updateErr);
+          return res.status(400).json({ error: `Supabase আপডেট করতে ব্যর্থ: ${updateErr.message}` });
+        }
+      }
+      console.log("Supabase settings successfully synced.");
+    } catch (e: any) {
+      console.error("Supabase settings exception:", e);
+      return res.status(500).json({ error: `ডাটাবেস কানেকশন বা কোয়েরি ত্রুটি: ${e.message}` });
+    }
   }
 
   db.admin_config = updatedConfig;
   writeDB(db);
-  res.json({ success: true, config: { ...updatedConfig, password_hash: undefined } });
+  // Keep the password_hash here so the client can update its session token and prevent authenticating issues
+  res.json({ success: true, config: updatedConfig });
 });
 
 // 13. Raw Base64 Image Upload handler

@@ -79,6 +79,7 @@ export default function App() {
   const [aboutTextInput, setAboutTextInput] = useState("");
   const [aboutMissionInput, setAboutMissionInput] = useState("");
   const [adminNewPasswordInput, setAdminNewPasswordInput] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [settingsStatus, setSettingsStatus] = useState({ success: false, error: "" });
   const [settingsLoading, setSettingsLoading] = useState(false);
 
@@ -1005,13 +1006,27 @@ export default function App() {
                       </h4>
                       <div className="max-w-md text-xs sm:text-sm">
                         <label className="block text-xs font-bold text-dark mb-1.5">নতুন পাসওয়ার্ড</label>
-                        <input
-                          type="password"
-                          value={adminNewPasswordInput}
-                          onChange={(e) => setAdminNewPasswordInput(e.target.value)}
-                          placeholder="পাসওয়ার্ড টেক্সট লিখুন (ফাঁকা রাখলে আগের আইডি পাসওয়ার্ড থাকবে)"
-                          className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
-                        />
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? "text" : "password"}
+                            value={adminNewPasswordInput}
+                            onChange={(e) => setAdminNewPasswordInput(e.target.value)}
+                            placeholder="পাসওয়ার্ড টেক্সট লিখুন (ফাঁকা রাখলে আগের আইডি পাসওয়ার্ড থাকবে)"
+                            className="w-full pl-4 pr-11 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-primary/60 hover:text-primary transition-colors cursor-pointer"
+                            title={showNewPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখুন"}
+                          >
+                            {showNewPassword ? (
+                              <EyeOff className="h-5 w-5" />
+                            ) : (
+                              <Eye className="h-5 w-5" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     </div>
 
