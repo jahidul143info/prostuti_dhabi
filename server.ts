@@ -850,7 +850,6 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
   if (supabaseClient) {
     try {
-      // First, get the single config row to find its true ID in Supabase
       const { data: dbRow, error: fetchErr } = await supabaseClient.from("admin_config").select("id").maybeSingle();
       if (fetchErr) {
         console.error("Supabase fetch error during settings save:", fetchErr);
@@ -858,7 +857,6 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
       }
 
       if (!dbRow) {
-        // If no row exists at all in Supabase yet, insert it!
         const insertRecord = {
           facebook_url: updatedConfig.facebook_url,
           youtube_url: updatedConfig.youtube_url,
@@ -877,7 +875,6 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
           return res.status(400).json({ error: `Supabase-এ নতুন কনফিগারেশন তৈরি করতে ব্যর্থ: ${insertErr.message}` });
         }
       } else {
-        // If it exists, update it with the found ID
         const { error: updateErr } = await supabaseClient.from("admin_config").update({
           facebook_url: updatedConfig.facebook_url,
           youtube_url: updatedConfig.youtube_url,
@@ -905,7 +902,6 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
   db.admin_config = updatedConfig;
   writeDB(db);
-  // Keep the password_hash here so the client can update its session token and prevent authenticating issues
   res.json({ success: true, config: updatedConfig });
 });
 
@@ -1072,13 +1068,28 @@ app.get("/api/admin/notices", adminAuth, async (req, res) => {
   if (supabaseClient) {
     try {
       const { data, error } = await supabaseClient.from("notices").select("*").order("created_at", { ascending: false });
-      if (!error && data) {
-        return res.json(data);
+      if (error) {
+        return res.json({ 
+          error_type: "supabase_table_missing", 
+          message: error.message, 
+          using_supabase: true,
+          notices: [] 
+        });
       }
-    } catch (_) {}
+      if (data) {
+        return res.json({ notices: data, using_supabase: true });
+      }
+    } catch (err: any) {
+      return res.json({ 
+        error_type: "supabase_exception", 
+        message: err?.message || err, 
+        using_supabase: true,
+        notices: [] 
+      });
+    }
   }
   const db = readDB();
-  res.json(db.notices || []);
+  res.json({ notices: db.notices || [], using_supabase: false });
 });
 
 // 20. Create Notice (Admin only)
@@ -1099,10 +1110,15 @@ app.post("/api/admin/notices", adminAuth, async (req, res) => {
   if (supabaseClient) {
     try {
       const { error } = await supabaseClient.from("notices").insert(record);
-      if (!error) {
-        return res.json(record);
+      if (error) {
+        return res.status(400).json({
+          error: `Supabase ত্রুটি: ${error.message}। অনুগ্রহ করে আপনার Supabase ড্যাশবোর্ডে "notices" টেবিলটি সঠিক কলামসহ তৈরি করুন।`
+        });
       }
-    } catch (_) {}
+      return res.json(record);
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
   }
 
   const db = readDB();
@@ -1128,10 +1144,13 @@ app.put("/api/admin/notices/:id", adminAuth, async (req, res) => {
         content: content.trim(),
         is_active: !!is_active
       }).eq("id", nid);
-      if (!error) {
-        return res.json({ id: nid, title, content, is_active });
+      if (error) {
+        return res.status(400).json({ error: `Supabase আপডেট ত্রুটি: ${error.message}` });
       }
-    } catch (_) {}
+      return res.json({ id: nid, title, content, is_active });
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
   }
 
   const db = readDB();
@@ -1157,10 +1176,13 @@ app.delete("/api/admin/notices/:id", adminAuth, async (req, res) => {
   if (supabaseClient) {
     try {
       const { error } = await supabaseClient.from("notices").delete().eq("id", nid);
-      if (!error) {
-        return res.json({ success: true, message: "নোটিশ মুছে ফেলা হয়েছে।" });
+      if (error) {
+        return res.status(400).json({ error: `Supabase নোটিশ ডিলিট ত্রুটি: ${error.message}` });
       }
-    } catch (_) {}
+      return res.json({ success: true, message: "নোটিশ মুছে ফেলা হয়েছে।" });
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
   }
 
   const db = readDB();

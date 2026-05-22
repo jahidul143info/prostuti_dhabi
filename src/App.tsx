@@ -143,7 +143,7 @@ export default function App() {
       const noticesRes = await fetch("/api/notices");
       if (noticesRes.ok) {
         const noticesData = await noticesRes.json();
-        setNotices(noticesData);
+        setNotices(Array.isArray(noticesData) ? noticesData : (noticesData?.notices || []));
       }
     } catch (err) {
       console.error("Error loading application states", err);
@@ -183,7 +183,7 @@ export default function App() {
       });
       if (resNotices.ok) {
         const noticesData = await resNotices.json();
-        setNotices(noticesData);
+        setNotices(Array.isArray(noticesData) ? noticesData : (noticesData?.notices || []));
       }
     } catch (error) {
       console.error("Failed loading authorized records", error);
@@ -261,7 +261,7 @@ export default function App() {
           if (res.ok) return res.json();
         })
         .then((data) => {
-          if (data) setNotices(data);
+          if (data) setNotices(Array.isArray(data) ? data : (data?.notices || []));
         })
         .catch((err) => console.error("Could not fetch notices", err));
     } else if (view === "course-detail" && courseId) {
@@ -1039,7 +1039,7 @@ export default function App() {
                       });
                       if (res.ok) {
                         const data = await res.json();
-                        setNotices(data);
+                        setNotices(Array.isArray(data) ? data : (data?.notices || []));
                       }
                     }}
                   />
