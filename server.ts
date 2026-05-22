@@ -419,16 +419,29 @@ function writeDB(data: LocalDB) {
 // Express API Routes
 
 // Authentication middleware check
-function adminAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
+async function adminAuth(req: express.Request, res: express.Response, next: express.NextFunction) {
   const token = req.headers["x-admin-token"] as string;
   if (!token) {
     return res.status(401).json({ error: "অননুমোদিত প্রবেশ! টোকেন পাওয়া যায়নি।" });
   }
 
   const config = readDB().admin_config;
+  let activePasswordHash = config.password_hash;
+
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("admin_config").select("password_hash").maybeSingle();
+      if (!error && data && data.password_hash) {
+        activePasswordHash = data.password_hash;
+      }
+    } catch (err) {
+      console.warn("Supabase fetch error in adminAuth middleware:", err);
+    }
+  }
   
   // Accept standard hashes for admin123, marufvai19, and currently active config hash
   const ALLOWED_TOKENS = new Set([
+    activePasswordHash,
     config.password_hash,
     "admin123-super-auth-bypass-secret",
     "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81", // marufvai19 SHA-256 hash
@@ -882,13 +895,24 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
   const db = readDB();
 
   // Handle password modification
-  let newPasswordHash = db.admin_config.password_hash;
+  let currentPasswordHash = db.admin_config.password_hash;
+  if (supabaseClient) {
+    try {
+      const { data } = await supabaseClient.from("admin_config").select("password_hash").maybeSingle();
+      if (data && data.password_hash) {
+        currentPasswordHash = data.password_hash;
+      }
+    } catch (_) {}
+  }
+
+  let newPasswordHash = currentPasswordHash;
   if (payload.new_password && payload.new_password.trim() !== "") {
     newPasswordHash = getSHA256(payload.new_password.trim());
   }
 
   const updatedConfig = {
     ...db.admin_config,
+    id: "config-default",
     facebook_url: payload.facebook_url || db.admin_config.facebook_url,
     youtube_url: payload.youtube_url || db.admin_config.youtube_url,
     telegram_url: payload.telegram_url || db.admin_config.telegram_url || "",
@@ -911,6 +935,7 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
       if (!dbRow) {
         const insertRecord = {
+          id: "config-default",
           facebook_url: updatedConfig.facebook_url,
           youtube_url: updatedConfig.youtube_url,
           telegram_url: updatedConfig.telegram_url,
