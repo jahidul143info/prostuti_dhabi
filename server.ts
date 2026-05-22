@@ -17,14 +17,23 @@ app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
 
 // Paths
-const uploadsDir = path.join(process.cwd(), "public", "uploads");
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+const isVercel = !!process.env.VERCEL;
+const uploadsDir = isVercel ? "/tmp" : path.join(process.cwd(), "public", "uploads");
+try {
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn("Could not create uploads directory in process.cwd(), fallback to /tmp:", err);
 }
 
 const dataDir = path.join(process.cwd(), "data");
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
+try {
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn("Could not create data directory, fallback to /tmp or read-only read:", err);
 }
 const dbPath = path.join(dataDir, "db.json");
 
@@ -351,8 +360,21 @@ const INITIAL_DB: LocalDB = {
 
 // Read / Write JSON storage utilities
 function readDB(): LocalDB {
+  if (isVercel && fs.existsSync("/tmp/db.json")) {
+    try {
+      const raw = fs.readFileSync("/tmp/db.json", "utf-8");
+      return JSON.parse(raw);
+    } catch (_) {}
+  }
+
   if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
+    try {
+      fs.writeFileSync(dbPath, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
+    } catch (_) {
+      try {
+        fs.writeFileSync("/tmp/db.json", JSON.stringify(INITIAL_DB, null, 2), "utf-8");
+      } catch (_) {}
+    }
     return INITIAL_DB;
   }
   try {
@@ -365,7 +387,13 @@ function readDB(): LocalDB {
       parsed.teachers = DEFAULT_TEACHERS;
       parsed.categories = INITIAL_DB.categories; // ensure the categories mapping has গুচ্ছ Category matches ID cat-oth correctly
       const updatedDB = { ...INITIAL_DB, ...parsed };
-      fs.writeFileSync(dbPath, JSON.stringify(updatedDB, null, 2), "utf-8");
+      try {
+        fs.writeFileSync(dbPath, JSON.stringify(updatedDB, null, 2), "utf-8");
+      } catch (_) {
+        try {
+          fs.writeFileSync("/tmp/db.json", JSON.stringify(updatedDB, null, 2), "utf-8");
+        } catch (_) {}
+      }
       return updatedDB;
     }
 
@@ -377,7 +405,14 @@ function readDB(): LocalDB {
 }
 
 function writeDB(data: LocalDB) {
-  fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), "utf-8");
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), "utf-8");
+  } catch (err) {
+    console.warn("Local database write failed (expected on serverless read-only platforms):", err);
+    try {
+      fs.writeFileSync("/tmp/db.json", JSON.stringify(data, null, 2), "utf-8");
+    } catch (_) {}
+  }
 }
 
 // Express API Routes
