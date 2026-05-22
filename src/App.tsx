@@ -19,12 +19,15 @@ import {
   FolderMinus,
   Save,
   Lock,
-  ExternalLink
+  ExternalLink,
+  Megaphone,
+  Bell,
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 // Types
-import { Course, Teacher, Enrollment, AdminConfig } from "./lib/types";
+import { Course, Teacher, Enrollment, AdminConfig, Notice } from "./lib/types";
 
 // Client Core Components
 import Navbar from "./components/Navbar";
@@ -41,6 +44,7 @@ import CourseForm from "./components/admin/CourseForm";
 import TeacherForm from "./components/admin/TeacherForm";
 import EnrollmentTable from "./components/admin/EnrollmentTable";
 import CategoryManager from "./components/admin/CategoryManager";
+import NoticeManager from "./components/admin/NoticeManager";
 
 export default function App() {
   // Views navigation router
@@ -50,6 +54,7 @@ export default function App() {
   // Unified global storage states
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [notices, setNotices] = useState<Notice[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [config, setConfig] = useState<Partial<AdminConfig> | null>(null);
@@ -65,6 +70,7 @@ export default function App() {
   const [adminPasswordInput, setAdminPasswordInput] = useState<string>("");
   const [showAdminPassword, setShowAdminPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState("");
+  const [showAllNoticesDialog, setShowAllNoticesDialog] = useState<boolean>(false);
   const [loggingIn, setLoggingIn] = useState(false);
 
   // Active Admin Subpages Control
@@ -132,6 +138,13 @@ export default function App() {
         const categoriesData = await categoriesRes.json();
         setCategories(categoriesData);
       }
+
+      // 5. Active Notices list
+      const noticesRes = await fetch("/api/notices");
+      if (noticesRes.ok) {
+        const noticesData = await noticesRes.json();
+        setNotices(noticesData);
+      }
     } catch (err) {
       console.error("Error loading application states", err);
     } finally {
@@ -162,6 +175,15 @@ export default function App() {
       if (resEnroll.ok) {
         const enrollsData = await resEnroll.json();
         setEnrollments(enrollsData);
+      }
+
+      // 3. Retrieve all notices (active or inactive)
+      const resNotices = await fetch("/api/admin/notices", {
+        headers: { "x-admin-token": adminToken }
+      });
+      if (resNotices.ok) {
+        const noticesData = await resNotices.json();
+        setNotices(noticesData);
       }
     } catch (error) {
       console.error("Failed loading authorized records", error);
@@ -233,6 +255,15 @@ export default function App() {
     if (view === "home") {
       setCurrentView("home");
       setSelectedCourseId(null);
+      // Synchronize latest active notices on home view entrance
+      fetch("/api/notices")
+        .then((res) => {
+          if (res.ok) return res.json();
+        })
+        .then((data) => {
+          if (data) setNotices(data);
+        })
+        .catch((err) => console.error("Could not fetch notices", err));
     } else if (view === "course-detail" && courseId) {
       setSelectedCourseId(courseId);
       setCurrentView("course-detail");
@@ -496,6 +527,50 @@ export default function App() {
             >
               <HeroSection onSeeCourses={onSeeCourses} onSeeAbout={onSeeAbout} />
               
+              {/* Notice Board Banner */}
+              {notices.filter(n => n.is_active).length > 0 && (
+                <div className="bg-[#FAFDFB]" id="homepage-notices-board">
+                  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 animate-fade-in">
+                    <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-5 relative overflow-hidden flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-[0_2px_10px_rgba(251,191,36,0.02)]">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100/20 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+                      <div className="flex items-start space-x-3.5 relative z-10">
+                        <div className="bg-amber-500 text-white p-2.5 rounded-xl shadow-xs flex items-center justify-center flex-shrink-0 mt-0.5 md:mt-0">
+                          <Megaphone className="h-5 w-5 animate-bounce" />
+                        </div>
+                        <div>
+                          <div className="flex items-center space-x-2">
+                            <span className="font-extrabold text-amber-800 text-xs sm:text-sm tracking-tight">সবশেষ নোটিশ:</span>
+                            <span className="bg-amber-100 border border-amber-200/50 text-amber-900 text-[9px] sm:text-[10px] font-sans font-bold px-2 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                              নতুন
+                            </span>
+                          </div>
+                          <h4 className="font-black text-dark text-sm sm:text-base mt-1.5 tracking-tight">
+                            {notices.filter(n => n.is_active)[0].title}
+                          </h4>
+                          <p className="text-gray-700 text-xs sm:text-sm mt-1 leading-relaxed whitespace-pre-line font-sans">
+                            {notices.filter(n => n.is_active)[0].content}
+                          </p>
+                          {notices.filter(n => n.is_active)[0].created_at && (
+                            <span className="text-[10px] text-gray-400 block mt-1.5 font-sans">
+                              তারিখ: {new Date(notices.filter(n => n.is_active)[0].created_at!).toLocaleDateString("bn-BD")}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="w-full md:w-auto flex flex-col gap-2 relative z-10 flex-shrink-0">
+                        <button 
+                          onClick={() => setShowAllNoticesDialog(true)}
+                          className="w-full md:w-auto text-center text-xs font-black text-amber-900 hover:text-amber-950 bg-amber-100 hover:bg-amber-200 border border-amber-200 px-4 py-2.5 rounded-xl transition font-sans cursor-pointer whitespace-nowrap"
+                        >
+                          সকল নোটিশ ({notices.filter(n => n.is_active).length})
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               {/* Courses Catalogue Grid */}
               <CourseGrid courses={courses} categories={categories} onSelectCourse={(id) => handleViewChange("course-detail", id)} />
               
@@ -644,6 +719,7 @@ export default function App() {
                       {activeAdminTab === "courses" && "কোর্স ক্রিয়েটর ও লিস্ট"}
                       {activeAdminTab === "categories" && "কোর্স ক্যাটাগরি ও ফিল্টার"}
                       {activeAdminTab === "teachers" && "শিক্ষক পরিচিতি ও প্রোফাইল"}
+                      {activeAdminTab === "notices" && "সিস্টেম নোটিশ ও বার্তা বোর্ড"}
                       {activeAdminTab === "enrollments" && "পেমেন্ট ডাটা ট্র্যাকিং"}
                       {activeAdminTab === "settings" && "সিস্টেম সেটিংস ও সামাজিক লিংক"}
                     </h1>
@@ -952,6 +1028,23 @@ export default function App() {
                   />
                 )}
 
+                {/* TAB: NOTICES MANAGER */}
+                {activeAdminTab === "notices" && (
+                  <NoticeManager
+                    adminToken={adminToken}
+                    notices={notices}
+                    onRefresh={async () => {
+                      const res = await fetch("/api/admin/notices", {
+                        headers: { "x-admin-token": adminToken }
+                      });
+                      if (res.ok) {
+                        const data = await res.json();
+                        setNotices(data);
+                      }
+                    }}
+                  />
+                )}
+
                 {/* TAB 4: ENROLLMENTS RECORDS */}
                 {activeAdminTab === "enrollments" && (
                   <div className="bg-white rounded-2xl border border-primary/5 shadow-xs p-6">
@@ -1152,6 +1245,60 @@ export default function App() {
       {/* 3. Footer displays globally except when in wide screen full admin console */}
       {currentView !== "admin-dashboard" && (
         <Footer setView={handleViewChange} />
+      )}
+
+      {/* Global Modal for All Notices */}
+      {showAllNoticesDialog && (
+        <div id="all-notices-dialog-overlay" className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in font-sans">
+          <div className="bg-white rounded-3xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden shadow-2xl border border-primary/5">
+            <div className="p-5 border-b border-primary/5 flex items-center justify-between bg-[#FAFDFB]">
+              <div className="flex items-center space-x-2">
+                <div className="bg-amber-500 text-white p-2 rounded-lg">
+                  <Bell className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-dark text-base sm:text-lg tracking-tight">সকল সক্রিয় নোটিশ ও বিজ্ঞপ্তি</h3>
+                  <p className="text-[10px] text-gray-400 font-sans">Prostuti Dhabi Notice Board</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAllNoticesDialog(false)}
+                className="bg-neutral-100 hover:bg-neutral-200 text-gray-600 p-2 rounded-xl transition cursor-pointer"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto space-y-4 flex-grow bg-neutral-50/50">
+              {notices.filter(n => n.is_active).map((notice) => (
+                <div key={notice.id} className="bg-white p-5 rounded-2xl border border-primary/5 shadow-xs transition-colors hover:border-amber-200/60">
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2 mb-2">
+                    <h4 className="font-extrabold text-sm sm:text-base text-dark tracking-tight">
+                      {notice.title}
+                    </h4>
+                    {notice.created_at && (
+                      <span className="text-[10px] text-gray-400 font-sans">
+                        {new Date(notice.created_at).toLocaleString("bn-BD")}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-700 leading-relaxed font-sans whitespace-pre-line">
+                    {notice.content}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 border-t border-primary/5 bg-neutral-50 flex justify-end">
+              <button
+                onClick={() => setShowAllNoticesDialog(false)}
+                className="bg-primary hover:bg-primary-dark text-[#D4A017] font-bold text-xs px-6 py-2.5 rounded-xl transition cursor-pointer"
+              >
+                বন্ধ করুন
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
     </div>

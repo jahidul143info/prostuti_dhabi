@@ -108,6 +108,13 @@ interface LocalDB {
     name: string;
     created_at: string;
   }>;
+  notices?: Array<{
+    id: string;
+    title: string;
+    content: string;
+    is_active: boolean;
+    created_at: string;
+  }>;
 }
 
 // Prepopulate database with realistic Bengali EdTech data
@@ -330,6 +337,15 @@ const INITIAL_DB: LocalDB = {
     { id: "cat-hum", name: "মানবিক", created_at: new Date().toISOString() },
     { id: "cat-biz", name: "ব্যবসায়", created_at: new Date().toISOString() },
     { id: "cat-oth", name: "অন্যান্য", created_at: new Date().toISOString() }
+  ],
+  notices: [
+    {
+      id: "notice-default-welcome",
+      title: "ভর্তি বিজ্ঞপ্তি ২০২৫ ও ওরিয়েন্টেশন ক্লাস",
+      content: "ঢাকা বিশ্ববিদ্যালয় স্বপ্নসারথিদের জন্য নতুন বি ইউনিটের মানবিক ও সি ইউনিটের ব্যবসায় ভর্তি প্রস্তুতি কার্যক্রম শুরু হয়েছে। সকল লাইভ ক্লাস এবং লেকচার শিট সংক্রান্ত তথ্যের জন্য ফেসবুক পেজে চোখ রাখুন ও ড্যাশবোর্ডে অ্যাক্সেস করুন। ভর্তি হতে নিচের কোর্সগুলো সরাসরি নির্বাচন করে পেমেন্ট সম্পূর্ণ করুন।",
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
   ]
 };
 
@@ -1034,6 +1050,124 @@ app.delete("/api/admin/categories/:id", adminAuth, async (req, res) => {
   db.categories = db.categories.filter(c => c.id !== cid);
   writeDB(db);
   res.json({ success: true, message: "ক্যাটাগরি মুছে ফেলা হয়েছে।" });
+});
+
+// 18. GET Notices (Public reads only active)
+app.get("/api/notices", async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("notices").select("*").eq("is_active", true).order("created_at", { ascending: false });
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  const notices = (db.notices || []).filter(n => n.is_active);
+  res.json(notices);
+});
+
+// 19. GET All Notices (Admin only)
+app.get("/api/admin/notices", adminAuth, async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("notices").select("*").order("created_at", { ascending: false });
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  res.json(db.notices || []);
+});
+
+// 20. Create Notice (Admin only)
+app.post("/api/admin/notices", adminAuth, async (req, res) => {
+  const { title, content, is_active } = req.body;
+  if (!title || !content) {
+    return res.status(400).json({ error: "শিরোনাম এবং নোটিশের বিষয়বস্তু দিন।" });
+  }
+
+  const record = {
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    content: content.trim(),
+    is_active: is_active ?? true,
+    created_at: new Date().toISOString()
+  };
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("notices").insert(record);
+      if (!error) {
+        return res.json(record);
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.notices) db.notices = [];
+  db.notices.push(record);
+  writeDB(db);
+  res.json(record);
+});
+
+// 21. Update Notice (Admin only)
+app.put("/api/admin/notices/:id", adminAuth, async (req, res) => {
+  const nid = req.params.id;
+  const { title, content, is_active } = req.body;
+
+  if (!title || !content) {
+    return res.status(400).json({ error: "শিরোনাম এবং নোটিশের বিষয়বস্তু দিন।" });
+  }
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("notices").update({
+        title: title.trim(),
+        content: content.trim(),
+        is_active: !!is_active
+      }).eq("id", nid);
+      if (!error) {
+        return res.json({ id: nid, title, content, is_active });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.notices) db.notices = [];
+  const idx = db.notices.findIndex(n => n.id === nid);
+  if (idx !== -1) {
+    db.notices[idx] = {
+      ...db.notices[idx],
+      title: title.trim(),
+      content: content.trim(),
+      is_active: !!is_active
+    };
+    writeDB(db);
+    return res.json(db.notices[idx]);
+  }
+  res.status(404).json({ error: "নোটিশ খুঁজে পাওয়া যায়নি।" });
+});
+
+// 22. Delete Notice (Admin only)
+app.delete("/api/admin/notices/:id", adminAuth, async (req, res) => {
+  const nid = req.params.id;
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("notices").delete().eq("id", nid);
+      if (!error) {
+        return res.json({ success: true, message: "নোটিশ মুছে ফেলা হয়েছে।" });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.notices) db.notices = [];
+  db.notices = db.notices.filter(n => n.id !== nid);
+  writeDB(db);
+  res.json({ success: true, message: "নোটিশ মুছে ফেলা হয়েছে।" });
 });
 
 // Ensure uploaded files are accessible publicly at /uploads/...

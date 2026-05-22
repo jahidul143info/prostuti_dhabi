@@ -7,7 +7,8 @@ import {
   Settings, 
   LogOut, 
   GraduationCap,
-  Tag
+  Tag,
+  Megaphone
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -23,6 +24,7 @@ export default function AdminSidebar({ currentTab, setTab, onLogout, statsPendin
     { id: "courses", label: "কোর্স ব্যবস্থাপনা", icon: <BookOpen className="h-5 w-5" /> },
     { id: "categories", label: "ক্যাটাগরি ব্যবস্থাপনা", icon: <Tag className="h-5 w-5" /> },
     { id: "teachers", label: "শিক্ষক ব্যবস্থাপনা", icon: <Users className="h-5 w-5" /> },
+    { id: "notices", label: "নোটিশ ব্যবস্থাপনা", icon: <Megaphone className="h-5 w-5" /> },
     { id: "enrollments", label: "ভর্তি আবেদন", icon: <ClipboardCheck className="h-5 w-5" />, badge: statsPending },
     { id: "settings", label: "সেটিংস ও কনফিগ", icon: <Settings className="h-5 w-5" /> }
   ];
