@@ -28,16 +28,18 @@ CREATE TABLE admin_config (
   password_hash text NOT NULL,
   facebook_url text,
   youtube_url text,
+  telegram_url text,
   whatsapp_number text,
   about_text text,
   about_mission text,
   bkash_number text,
   nagad_number text,
+  rocket_number text,
   created_at timestamptz DEFAULT now()
 );
 
 -- Insert original default admin password 'admin123'
-INSERT INTO admin_config (password_hash, facebook_url, youtube_url, whatsapp_number, about_text, about_mission, bkash_number, nagad_number) 
+INSERT INTO admin_config (password_hash, facebook_url, youtube_url, whatsapp_number, about_text, about_mission, bkash_number, nagad_number, rocket_number) 
 VALUES (
   '5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8', -- SHA-256 for 'admin123'
   'https://facebook.com/prostuti.dhabi',
@@ -46,7 +48,8 @@ VALUES (
   'আমরা ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য সেরা প্রস্তুতি নিশ্চিত করি। আমাদের অভিজ্ঞ শিক্ষকমণ্ডলী ও গোছানো কারিকুলাম আপনাকে সাহায্য করবে আপনার কাঙ্ক্ষিত লক্ষ্যে পৌঁছাতে।',
   'আমাদের মিশন হলো প্রতিটি শিক্ষার্থীর কাছে ঢাকা বিশ্ববিদ্যালয়ের স্বপ্নকে বাস্তবসম্মত ও সহজসাধ্য করে তোলা। সাশ্রয়ী মূল্যে মানসম্মত শিক্ষা প্রযুক্তির মাধ্যমে সবার কাছে পৌঁছে দেওয়া।',
   '01712345678',
-  '01912345678'
+  '01912345678',
+  '01811223344'
 );
 
 -- 2. Create table for Teachers
@@ -90,6 +93,21 @@ CREATE TABLE enrollments (
   admin_note text,
   created_at timestamptz DEFAULT now()
 );
+
+-- 5. Create table for Course Categories
+CREATE TABLE categories (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  name text UNIQUE NOT NULL,
+  created_at timestamptz DEFAULT now()
+);
+
+-- Insert default categories
+INSERT INTO categories (name) VALUES 
+('বিজ্ঞান'),
+('মানবিক'),
+('ব্যবসায়'),
+('অন্যান্য')
+ON CONFLICT (name) DO NOTHING;
 ```
 
 ### 🔒 ROW LEVEL SECURITY (RLS) POLICIES
@@ -116,6 +134,13 @@ CREATE POLICY "Anyone can insert enrollment" ON enrollments
 ALTER TABLE admin_config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Public can read config" ON admin_config
   FOR SELECT USING (true);
+
+-- Security configuration for categories
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Public can read categories" ON categories
+  FOR SELECT USING (true);
+CREATE POLICY "Admin can modify categories" ON categories
+  FOR ALL USING (true);
 ```
 
 ### 🗂️ SUPABASE STORAGE BUCKETS

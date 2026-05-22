@@ -128,7 +128,7 @@ export default function EnrollmentTable({ enrollments, onUpdateStatus }: Enrollm
               </thead>
               <tbody className="divide-y divide-primary/5 text-xs sm:text-sm text-gray-700 font-sans">
                 {filteredEnrollments.map((en) => {
-                  const paymentDisplay = en.payment_method === "bkash" ? "বিকাশ" : "নগদ";
+                  const paymentDisplay = en.payment_method === "bkash" ? "বিকাশ" : en.payment_method === "nagad" ? "নগদ" : "রকেট";
                   const dateString = en.created_at ? new Date(en.created_at).toLocaleDateString("bn-BD", {
                     year: "numeric",
                     month: "long",
@@ -154,7 +154,11 @@ export default function EnrollmentTable({ enrollments, onUpdateStatus }: Enrollm
                       <td className="px-6 py-4.5">
                         <div className="flex items-center space-x-1.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            en.payment_method === "bkash" ? "bg-pink-100 text-pink-700" : "bg-orange-100 text-orange-700"
+                            en.payment_method === "bkash" 
+                              ? "bg-pink-100 text-pink-700" 
+                              : en.payment_method === "nagad" 
+                                ? "bg-orange-100 text-orange-700" 
+                                : "bg-purple-100 text-purple-700"
                           }`}>
                             {paymentDisplay}
                           </span>

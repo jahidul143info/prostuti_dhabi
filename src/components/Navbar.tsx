@@ -59,10 +59,16 @@ export default function Navbar({ currentView, setView, isAdminLoggedIn, onLogout
           <div
             id="nav-logo-btn"
             onClick={() => setView("home")}
-            className="flex items-center space-x-2 cursor-pointer group"
+            className="flex items-center space-x-2.5 cursor-pointer group"
           >
-            <div className="bg-secondary p-2 rounded-xl text-dark flex items-center justify-center transition-transform duration-300 group-hover:scale-110 shadow-[0_0_15px_rgba(212,160,23,0.3)]">
-              <GraduationCap className="h-6 w-6" id="nav-logo-icon" />
+            <div className="flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+              <img
+                src="https://ziydyorjdctwisatbvwp.supabase.co/storage/v1/object/public/others/photo_2026-05-22_00-09-37.jpg"
+                alt="Logo"
+                referrerPolicy="no-referrer"
+                className="h-10 w-10 object-cover rounded-lg border border-white/20 shadow-[0_0_15px_rgba(212,160,23,0.25)]"
+                id="nav-logo-icon"
+              />
             </div>
             <div>
               <span className="text-xl font-bold text-white tracking-tight" id="nav-logo-title">

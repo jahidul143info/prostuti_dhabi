@@ -35,7 +35,7 @@ export interface Enrollment {
   course_id: string;
   student_name: string;
   student_phone: string;
-  payment_method: 'bkash' | 'nagad';
+  payment_method: 'bkash' | 'nagad' | 'rocket';
   payment_number: string;
   transaction_id: string;
   status: 'pending' | 'approved' | 'rejected';
@@ -49,10 +49,12 @@ export interface AdminConfig {
   password_hash: string;
   facebook_url?: string;
   youtube_url?: string;
+  telegram_url?: string;
   whatsapp_number?: string;
   about_text?: string;
   about_mission?: string;
   bkash_number?: string;
   nagad_number?: string;
+  rocket_number?: string;
   created_at?: string;
 }

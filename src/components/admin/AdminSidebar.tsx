@@ -6,7 +6,8 @@ import {
   ClipboardCheck, 
   Settings, 
   LogOut, 
-  GraduationCap 
+  GraduationCap,
+  Tag
 } from "lucide-react";
 
 interface AdminSidebarProps {
@@ -20,6 +21,7 @@ export default function AdminSidebar({ currentTab, setTab, onLogout, statsPendin
   const tabs = [
     { id: "overview", label: "ড্যাশবোর্ড", icon: <Building2 className="h-5 w-5" /> },
     { id: "courses", label: "কোর্স ব্যবস্থাপনা", icon: <BookOpen className="h-5 w-5" /> },
+    { id: "categories", label: "ক্যাটাগরি ব্যবস্থাপনা", icon: <Tag className="h-5 w-5" /> },
     { id: "teachers", label: "শিক্ষক ব্যবস্থাপনা", icon: <Users className="h-5 w-5" /> },
     { id: "enrollments", label: "ভর্তি আবেদন", icon: <ClipboardCheck className="h-5 w-5" />, badge: statsPending },
     { id: "settings", label: "সেটিংস ও কনফিগ", icon: <Settings className="h-5 w-5" /> }
@@ -29,10 +31,13 @@ export default function AdminSidebar({ currentTab, setTab, onLogout, statsPendin
     <aside id="admin-sidebar" className="bg-dark text-white w-full md:w-64 min-h-screen border-r border-white/5 flex flex-col justify-between p-6">
       {/* Upper Logo header */}
       <div className="space-y-8">
-        <div className="flex items-center space-x-2 border-b border-white/5 pb-6">
-          <div className="bg-secondary p-1.5 rounded-lg text-dark">
-            <GraduationCap className="h-5 w-5" />
-          </div>
+        <div className="flex items-center space-x-2.5 border-b border-white/5 pb-6">
+          <img
+            src="https://ziydyorjdctwisatbvwp.supabase.co/storage/v1/object/public/others/photo_2026-05-22_00-09-37.jpg"
+            alt="Logo"
+            referrerPolicy="no-referrer"
+            className="h-8 w-8 object-cover rounded-lg border border-white/10"
+          />
           <div>
             <h2 className="font-extrabold text-sm sm:text-base text-white leading-none">
               ম্যানেজমেন্ট পোর্টাল

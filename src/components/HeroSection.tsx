@@ -1,5 +1,5 @@
 import React from "react";
-import { BookOpen, Award, Users, ArrowRight, Play } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
 
 interface HeroSectionProps {
@@ -28,27 +28,6 @@ export default function HeroSection({ onSeeCourses, onSeeAbout }: HeroSectionPro
       transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
     },
   };
-
-  const statCards = [
-    {
-      icon: <Users className="h-6 w-6 text-secondary" />,
-      title: "৫০০+ শিক্ষার্থী",
-      desc: "সফলভাবে ভর্তি প্রস্তুতি নিচ্ছেন",
-      id: "stat-card-students",
-    },
-    {
-      icon: <BookOpen className="h-6 w-6 text-secondary" />,
-      title: "২০+ কোর্স",
-      desc: "বিশেষায়িত মডিউল ও লেকচার",
-      id: "stat-card-courses",
-    },
-    {
-      icon: <Award className="h-6 w-6 text-secondary" />,
-      title: "১০০% সাফল্য",
-      desc: "বিগত বছরের সাফল্য অনুপাত",
-      id: "stat-card-success",
-    },
-  ];
 
   return (
     <div
@@ -102,7 +81,7 @@ export default function HeroSection({ onSeeCourses, onSeeAbout }: HeroSectionPro
           {/* Action CTA Buttons */}
           <motion.div
             variants={itemVariants}
-            className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-5 mb-14 w-full justify-center max-w-md px-4"
+            className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-5 mb-8 w-full justify-center max-w-md px-4"
             id="hero-cta-group"
           >
             <button
@@ -121,33 +100,6 @@ export default function HeroSection({ onSeeCourses, onSeeAbout }: HeroSectionPro
             >
               <span>আমাদের সম্পর্কে</span>
             </button>
-          </motion.div>
-
-          {/* Floating Stats Block */}
-          <motion.div
-            variants={itemVariants}
-            className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-5xl px-4"
-            id="hero-stats-panel"
-          >
-            {statCards.map((stat, i) => (
-              <div
-                key={i}
-                id={stat.id}
-                className="glass-panel-dark border border-white/5 p-6 rounded-2xl text-left flex items-center space-x-4 transition-transform hover:-translate-y-1 shadow-[0_4px_30px_rgba(0,0,0,0.15)]"
-              >
-                <div className="bg-white/5 p-3.5 rounded-xl border border-white/10">
-                  {stat.icon}
-                </div>
-                <div>
-                  <h3 className="text-white text-xl font-bold font-sans tracking-wide">
-                    {stat.title}
-                  </h3>
-                  <p className="text-white/60 text-xs sm:text-sm mt-0.5">
-                    {stat.desc}
-                  </p>
-                </div>
-              </div>
-            ))}
           </motion.div>
         </motion.div>
       </div>

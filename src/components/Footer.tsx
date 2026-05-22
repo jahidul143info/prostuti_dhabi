@@ -20,10 +20,13 @@ export default function Footer({ setView }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 mb-12 border-b border-white/5">
           {/* Logo brand & description */}
           <div className="md:col-span-6 space-y-4">
-            <div className="flex items-center space-x-2">
-              <div className="bg-secondary p-2 rounded-xl text-dark">
-                <GraduationCap className="h-5 w-5" />
-              </div>
+            <div className="flex items-center space-x-2.5">
+              <img
+                src="https://ziydyorjdctwisatbvwp.supabase.co/storage/v1/object/public/others/photo_2026-05-22_00-09-37.jpg"
+                alt="Logo"
+                referrerPolicy="no-referrer"
+                className="h-8 w-8 object-cover rounded-lg border border-white/10"
+              />
               <span className="text-xl font-bold tracking-tight">
                 প্রস্তুতি <span className="text-secondary font-extrabold">ঢাবি</span>
               </span>

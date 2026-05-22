@@ -227,6 +227,7 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
                   course={course}
                   config={config}
                   onSuccess={() => setShowEnrollForm(false)}
+                  onCancel={() => setShowEnrollForm(false)}
                 />
               </div>
             )}

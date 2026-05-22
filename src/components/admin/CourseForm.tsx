@@ -5,14 +5,15 @@ import { Course, Teacher, CurriculumWeek } from "../../lib/types";
 interface CourseFormProps {
   course?: Course | null;
   teachers: Teacher[];
+  categories?: Array<{ id: string; name: string }>;
   onSave: (courseData: Partial<Course>) => Promise<void>;
   onCancel: () => void;
   adminToken: string;
 }
 
-export default function CourseForm({ course, teachers, onSave, onCancel, adminToken }: CourseFormProps) {
+export default function CourseForm({ course, teachers, categories = [], onSave, onCancel, adminToken }: CourseFormProps) {
   const [title, setTitle] = useState(course?.title || "");
-  const [category, setCategory] = useState(course?.category || "বিজ্ঞান");
+  const [category, setCategory] = useState(course?.category || (categories.length > 0 ? categories[0].name : "বিজ্ঞান"));
   const [shortDesc, setShortDesc] = useState(course?.short_description || "");
   const [fullDesc, setFullDesc] = useState(course?.full_description || "");
   const [price, setPrice] = useState(course?.price || 0);
@@ -27,7 +28,12 @@ export default function CourseForm({ course, teachers, onSave, onCancel, adminTo
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-  const categories = ["বাংলা", "ইংরেজি", "গণিত", "সাধারণ জ্ঞান", "বিজ্ঞান", "অন্যান্য"];
+  const categoryList = categories.length > 0 
+    ? categories.map(c => c.name) 
+    : ["विज्ञान", "मानविक", "ब्यबसाए", "अन्यन्य"]; // Wait, let's write accurate Bengali text: ["বিজ্ঞান", "মানবিক", "ব্যবসায়", "অন্যান্য"]
+  const finalCategoryList = categories.length > 0 
+    ? categories.map(c => c.name) 
+    : ["বিজ্ঞান", "মানবিক", "ব্যবসায়", "অন্যান্য"];
 
   // File to base64 upload
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,7 +189,7 @@ export default function CourseForm({ course, teachers, onSave, onCancel, adminTo
             onChange={(e) => setCategory(e.target.value)}
             className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none bg-white font-sans"
           >
-            {categories.map((cat) => (
+            {finalCategoryList.map((cat) => (
               <option key={cat} value={cat}>
                 {cat}
               </option>

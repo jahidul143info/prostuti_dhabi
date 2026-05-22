@@ -34,7 +34,10 @@ function getSHA256(text: string): string {
 }
 
 // Check if Supabase keys exist
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+if (supabaseUrl) {
+  supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "");
+}
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const hasSupabase = supabaseUrl !== "" && supabaseServiceKey !== "" && !supabaseUrl.includes("your_supabase_url");
 
@@ -55,11 +58,13 @@ interface LocalDB {
     password_hash: string;
     facebook_url: string;
     youtube_url: string;
+    telegram_url?: string;
     whatsapp_number: string;
     about_text: string;
     about_mission: string;
     bkash_number: string;
     nagad_number: string;
+    rocket_number?: string;
     created_at: string;
   };
   teachers: Array<{
@@ -91,11 +96,16 @@ interface LocalDB {
     course_id: string;
     student_name: string;
     student_phone: string;
-    payment_method: 'bkash' | 'nagad';
+    payment_method: 'bkash' | 'nagad' | 'rocket';
     payment_number: string;
     transaction_id: string;
     status: 'pending' | 'approved' | 'rejected';
     admin_note?: string;
+    created_at: string;
+  }>;
+  categories: Array<{
+    id: string;
+    name: string;
     created_at: string;
   }>;
 }
@@ -106,14 +116,14 @@ const DEFAULT_COURSES = [
     id: "course-ka-unit-2025",
     title: "ঢাবি 'ক' ইউনিট সম্পূর্ণ ভর্তি প্রস্তুতি ২০২৫",
     short_description: "বিজ্ঞান বিভাগের শিক্ষার্থীদের জন্য পদার্থ, রসায়ন, গণিত ও জীববিজ্ঞানের নিখুঁত প্রস্তুতি কোর্স।",
-    full_description: "ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিট ভর্তি পরীক্ষায় শতভাগ প্রস্তুতির লক্ষ্য নিয়ে এই কোর্সটি ডিজাইন করা হয়েছে। অভিজ্ঞ বিশ্ববিদ্যালয় পড়ুয়া মেন্টর এবং বুয়েট-মেডিকেল শিক্ষকমণ্ডলী দ্বারা পরিচালিত হবে ক্লাসসমূহ। কোর্সে থাকছে অধ্যায়ভিত্তিক প্রশ্নব্যাংক সমাধান, টেকনিক ক্লাস এবং নিয়মিত উইকলি ও ফুল ওএমআর ভিত্তিক মডেল টেস্ট।",
+    full_description: "ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিট ভর্তি পরীক্ষায় শতভাগ প্রস্তুতির লক্ষ্য নিয়ে এই কোর্সটি ডিজাইন করা হয়েছে। অভিজ্ঞ বিশ্ববিদ্যালয় পড়ুয়া মেন্টর এবং বুয়েট-মেডিকেল শিক্ষকমণ্ডলী দ্বারা পরিচালিত হবে ক্লাসসমূহ। কোর্সে থাকছে অধ্যায়ভিত্তিক প্রশ্নব্যাংক সমাধান, টেকনিক ক্লাস এবং নিয়মিত উইকলি ও ওএমআর ভিত্তিক মডেল টেস্ট।",
     cover_photo_url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop",
     price: 3500,
     duration: "৪ মাস",
     total_classes: 120,
     category: "বিজ্ঞান",
     is_published: true,
-    teacher_ids: ["teacher-sajid", "teacher-farhana"],
+    teacher_ids: ["teacher-sajid", "teacher-anika"],
     curriculum: [
       { week: "সপ্তাহ ১", topic: "ক্যালকুলাস ও নিউটনীয় বলবিদ্যা", details: "অন্তরীকরণ ও যোগজীকরণ এর মূল নিয়মসমূহ এবং বলবিদ্যা পরীক্ষার প্রশ্ন ব্যাঙ্ক সমাধান।" },
       { week: "সপ্তাহ ২", topic: "জৈব রসায়ন ও সমতা", details: "অ্যালকেন, অ্যালকিন, অ্যালকাইন রিঅ্যাকশন মেকানিজম এবং গুরুত্বপূর্ণ রূপান্তরসমূহ।" },
@@ -122,10 +132,28 @@ const DEFAULT_COURSES = [
     created_at: new Date().toISOString()
   },
   {
+    id: "course-medical-parallel",
+    title: "মেডিকেল + ঢাবি 'ক' সমান্তরাল প্রস্তুতি ব্যাচ",
+    short_description: "মেডিকেল ভর্তি প্রস্তুতি ও ঢাবি ক ইউনিটের পদার্থ-রসায়ন-জীববিজ্ঞান কভার ব্যাচ।",
+    full_description: "যারা একই সাথে মেডিকেল এবং ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিটের প্রস্তুতি নিতে চান, তাদের জন্য দ্বিমুখী ফুল সিলেবাস বুস্টার ব্যাচ। চমৎকার শর্টকাট ট্রিক্স এবং বিস্তারিত আলোচনা যা আপনার উভয় পরীক্ষাতেই চান্স পাওয়ার সম্ভাবনা বহুগুণে বাড়িয়ে দিবে।",
+    cover_photo_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=600&auto=format&fit=crop",
+    price: 4200,
+    duration: "৫ মাস",
+    total_classes: 150,
+    category: "বিজ্ঞান",
+    is_published: true,
+    teacher_ids: ["teacher-anika", "teacher-sajid"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "মানব শারীরতত্ত্ব ও প্রাণীর পরিচিতি", details: "পরিপাক, রক্ত সংবহন ও হাইড্রা সংলগ্ন গুরুত্বপূর্ণ মেডিকেল প্রশ্ন ব্যাখ্যা।" },
+      { week: "সপ্তাহ ২", topic: "রাসায়নিক পরিবর্তনের গাণিতিক হ্যাকস", details: "pH হ্যাকস, বাফার সলিউশন এবং রাসায়নিক গণনা ট্রিক্স।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
     id: "course-kha-unit-2025",
-    title: "ঢাবি 'খ' ইউনিট সমন্বিত মানবিক ও ব্যবসায় প্রস্তুতি",
+    title: "ঢাবি 'খ' ইউনিট সমন্বিত মানবিক প্রস্তুতি",
     short_description: "বাংলা, ইংরেজি এবং অত্যন্ত তথ্যবহুল সাধারণ জ্ঞানের জন্য কমপ্লিট সলিউশন ব্যাচ।",
-    full_description: "মানবিক এবং ব্যবসায় শিক্ষা বিভাগ থেকে যারা ঢাকা বিশ্ববিদ্যালয়ে স্বপ্ন দেখছেন, তাদের জন্য বাংলা এবং ইংরেজি ব্যাকরণ ও সাহিত্যের সাথে আন্তর্জাতিক ও বাংলাদেশ বিষয়ের সাধারণ জ্ঞান সম্পূর্ণ কভার করা হবে এই কোর্সে। প্রতিদিনের পড়া পরীক্ষা নিয়ে যাচাই করা হবে।",
+    full_description: "মানবিক বিভাগ থেকে যারা ঢাকা বিশ্ববিদ্যালয়ে স্বপ্ন দেখছেন, তাদের জন্য বাংলা এবং ইংরেজি ব্যাকরণ ও সাহিত্যের সাথে আন্তর্জাতিক ও বাংলাদেশ বিষয়ের সাধারণ জ্ঞান সম্পূর্ণ কভার করা হবে এই কোর্সে। প্রতিদিনের পড়া পরীক্ষা নিয়ে যাচাই করা হবে।",
     cover_photo_url: "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=600&auto=format&fit=crop",
     price: 2800,
     duration: "৩ মাস",
@@ -136,6 +164,93 @@ const DEFAULT_COURSES = [
     curriculum: [
       { week: "সপ্তাহ ১", topic: "বাংলা ব্যাকরণ ও প্রিপজিশন", details: "সন্ধি, সমাস ও English Prepositions masterclass." },
       { week: "সপ্তাহ ২", topic: "বাঙালির ইতিহাস ও সমসাময়িক সাধারণ জ্ঞান", details: "ভাষা আন্দোলন থেকে শুরু করে মুক্তিযুদ্ধ এবং বর্তমান মেগা প্রজেক্টসমূহ পর্যালোচনা।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "course-premium-english",
+    title: "আইবিএ ও ঢাবি বি-ইউনিট প্রিমিয়াম ইংলিশ ব্যাচ",
+    short_description: "English Grammar, Vocabulary, and Written preparation to build ultimate confidence.",
+    full_description: "ঢাকা বিশ্ববিদ্যালয় এবং আইবিএ ভর্তি পরীক্ষার অন্যতম কঠিন অংশ ইংরেজি ভীতি দূর করার বিশেষ ব্যাচ। এই কোর্সে বেসিক গ্রামার থেকে শুরু করে অ্যাডভান্সড রিডিং কম্প্রিহেনশন ও রিটেন পার্টের খুঁটিনাটি শেখানো হবে অত্যন্ত সহজ আঙ্গিকে।",
+    cover_photo_url: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=600&auto=format&fit=crop",
+    price: 2000,
+    duration: "২ মাস",
+    total_classes: 45,
+    category: "মানবিক",
+    is_published: true,
+    teacher_ids: ["teacher-farhana"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "Subject-Verb Agreement & Parts of Speech", details: "পরীক্ষায় বারবার আসা গুরুত্বপূর্ণ ৫০টি রুলস ও সংশোধন পদ্ধতি।" },
+      { week: "সপ্তাহ ২", topic: "Free Handwriting & Essay/Paragraph Writing", details: "রিটেন পার্টের কাঠামো এবং কীভাবে মানসম্মত ইংরেজি উত্তর লেখা যায়।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "course-ga-unit-2025",
+    title: "ঢাবি 'গ' ইউনিট ব্যবসায় শিক্ষা চূড়ান্ত ভর্তি ব্যাচ",
+    short_description: "Accounting, Management, Marketing/Finance ও English এর পূর্ণাঙ্গ প্রস্তুতি।",
+    full_description: "ঢাকা বিশ্ববিদ্যালয়ের 'গ' ইউনিটে (ব্যবসায় শিক্ষা) চান্স পাওয়ার চূড়ান্ত সহায়ক ব্যাচ এটি। হিসাববিজ্ঞান ও ব্যবসায় নীতি বিষয়ের সকল অধ্যায়ের গাণিতিক ও তাত্ত্বিক সমস্যাগুলো অত্যন্ত সহজভাবে বিশ্লেষণ করা হবে।",
+    cover_photo_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format&fit=crop",
+    price: 3000,
+    duration: "৩.৫ মাস",
+    total_classes: 80,
+    category: "ব্যবসায়",
+    is_published: true,
+    teacher_ids: ["teacher-manzur", "teacher-farhana"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "হিসাববিজ্ঞান পরিচিতি ও জাবেদা", details: "লেনদেনের দ্বিমুখী প্রভাব, হিসাব সমীকরণ এবং ডেবিট-ক্রেডিট বিশ্লেষণ।" },
+      { week: "সপ্তাহ ২", topic: "ব্যবসায় সংগঠন ও আধুনিক ব্যবস্থাপনা", details: "শিল্প ও বাণিজ্য, অংশীদারি কারবারের খুঁটিনাটি আইনি জটিলতা।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "course-commerce-math",
+    title: "ব্যবসায় গণিত এবং হিসাববিজ্ঞান স্পেশাল হ্যাকস",
+    short_description: "হিসাববিজ্ঞানের ট্রিকি ম্যাথ ট্রিকস ও দ্রুত ক্যালকুলেশন ছাড়াই সমাধান করার মেথড।",
+    full_description: "ক্যালকুলেটর ছাড়া জাবেদা, খতিয়ান, সমন্বয় দাখিলা ও দ্রুত গাণিতিক সমস্যার সমাধান করার ম্যাজিক্যাল হ্যাকস নিয়ে সাজানো মডিউল। কম সময়ে নিখুঁত মার্কস তোলার অব্যর্থ কৌশল শিখুন সরাসরি ঢাবি টপারদের থেকে।",
+    cover_photo_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=600&auto=format&fit=crop",
+    price: 1500,
+    duration: "১.৫ মাস",
+    total_classes: 30,
+    category: "ব্যবসায়",
+    is_published: true,
+    teacher_ids: ["teacher-manzur"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "অনুপাত বিশ্লেষণ ও আর্থিক বিবরণীর ট্রিক্স", details: "অনুপাত বিশ্লেষণ ও আর্থিক বিবরণীর কঠিন অংকগুলো শর্টকাটে করার ট্রিক্স।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "course-gst-combined",
+    title: "জিএসটি গুচ্ছ (GST) ও রাবি/চবি সমন্বিত ব্যাচ",
+    short_description: "২২টি সাধারণ বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় এবং রাবি-চবির সেরা ভর্তি প্রস্তুতি ব্যাচ।",
+    full_description: "গুচ্ছভুক্ত ২৪টি সাধারণ এবং বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয়ের সমন্বিত 'ক', 'খ', 'গ' ইউনিট প্রস্তুতিতে সাহায্য করার উদ্দেশ্যে বিশেষভাবে ডিজাইনকৃত কোর্স। পূর্ণাঙ্গ শর্টকাট মেথড ও সিলেবাস কভারেজ নিশ্চিত করা হবে।",
+    cover_photo_url: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop",
+    price: 2500,
+    duration: "৩ মাস",
+    total_classes: 75,
+    category: "গুচ্ছ",
+    is_published: true,
+    teacher_ids: ["teacher-sajid", "teacher-farhana", "teacher-anika"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "গুচ্ছভিত্তিক বহুনির্বাচনী প্রশ্নব্যাংক সমাধান", details: "রাবি, চবি এবং জিএসটি ওএমআর কাঠামোর তুলনামূলক আলোচনা।" }
+    ],
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "course-omr-model-test",
+    title: "ভর্তি পরীক্ষা ওএমআর ভিত্তিক চূড়ান্ত মডেল টেস্ট সিরিজ",
+    short_description: "দেশব্যাপী লাখো ভর্তিচ্ছু শিক্ষার্থীদের সঙ্গে ওএমআর মেধা যাচাই টেস্ট ও সলভ ক্লাস সিরিজ।",
+    full_description: "অনলাইন এবং অফলাইন উভয় মাধ্যমে ভর্তি পরীক্ষার ঠিক আগে নিজেকে যাচাই করার জন্য ওএমআর ভিত্তিক চূড়ান্ত মডেল টেস্ট ব্যাচ। প্রতিটি মডেল টেস্টের শেষে থাকবে বিষয়ভিত্তিক সমাধান ক্লাস ও নেগেটিভ মার্কিং সহ রিয়েল-টাইম ড্যাশবোর্ড লিডারবোর্ড।",
+    cover_photo_url: "https://images.unsplash.com/photo-1510712474076-eb51a4a821e1?q=80&w=600&auto=format&fit=crop",
+    price: 1000,
+    duration: "১ মাস",
+    total_classes: 25,
+    category: "গুচ্ছ",
+    is_published: true,
+    teacher_ids: ["teacher-sajid", "teacher-farhana", "teacher-manzur", "teacher-anika"],
+    curriculum: [
+      { week: "সপ্তাহ ১", topic: "১০ সেট ওএমআর মডেল টেস্ট", details: "নেগেটিভ মার্কিং বিশ্লেষণের ওপর গুরুত্ব দিয়ে প্রস্তুতকৃত মডেল সলভ।" }
     ],
     created_at: new Date().toISOString()
   }
@@ -159,6 +274,24 @@ const DEFAULT_TEACHERS = [
     photo_url: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300&auto=format&fit=crop",
     qualifications: "বিএ (সরাসরি ১ম শ্রেণী), এমএ (ইংরেজি, ঢাবি)",
     created_at: new Date().toISOString()
+  },
+  {
+    id: "teacher-manzur",
+    name: "মনজুরুল ইসলাম",
+    subject: "হিসাববিজ্ঞান ও ফিন্যান্স",
+    bio: "৮ বছরের বেশি সময় কোচিং জগতে গ-ইউনিট বিশেষজ্ঞদের অন্যতম শীর্ষ মেন্টর।",
+    photo_url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300&auto=format&fit=crop",
+    qualifications: "বিবিএ, এমবিএ (হিসাববিজ্ঞান বিভাগ, ঢাকা বিশ্ববিদ্যালয়)",
+    created_at: new Date().toISOString()
+  },
+  {
+    id: "teacher-anika",
+    name: "আনিকা তাসনিম",
+    subject: "পদার্থবিজ্ঞান ও জীববিজ্ঞান",
+    bio: "ভর্তি পরীক্ষার্থীদের জন্য সহজ কৌশলে কঠিন সূত্র ও তত্ত্ব মনে রাখার জাদুকরি ট্রেইনার।",
+    photo_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300&auto=format&fit=crop",
+    qualifications: "এমবিবিএস (ঢাকা মেডিকেল কলেজ), বিএসসি (পদার্থবিজ্ঞান, ঢাবি)",
+    created_at: new Date().toISOString()
   }
 ];
 
@@ -168,11 +301,13 @@ const INITIAL_DB: LocalDB = {
     password_hash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8", // admin123
     facebook_url: "https://facebook.com/prostuti.dhabi",
     youtube_url: "https://youtube.com/prostuti.dhabi",
+    telegram_url: "https://t.me/prostuti_dhabi",
     whatsapp_number: "01712345678",
     about_text: "আমরা ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য সেরা প্রস্তুতি নিশ্চিত করি। আমাদের অভিজ্ঞ শিক্ষকমণ্ডলী ও গোছানো কারিকুলাম আপনাকে সাহায্য করবে আপনার কাঙ্ক্ষিত লক্ষ্যে পৌঁছাতে।",
     about_mission: "আমাদের মিশন হলো প্রতিটি শিক্ষার্থীর কাছে ঢাকা বিশ্ববিদ্যালয়ের স্বপ্নকে বাস্তবসম্মত ও সহজসাধ্য করে তোলা। সাশ্রয়ী মূল্যে মানসম্মত শিক্ষা প্রযুক্তির মাধ্যমে সবার কাছে পৌঁছে দেওয়া।",
     bkash_number: "01712345678",
     nagad_number: "01912345678",
+    rocket_number: "01811223344",
     created_at: new Date().toISOString()
   },
   teachers: DEFAULT_TEACHERS,
@@ -189,6 +324,12 @@ const INITIAL_DB: LocalDB = {
       status: "pending",
       created_at: new Date().toISOString()
     }
+  ],
+  categories: [
+    { id: "cat-sci", name: "বিজ্ঞান", created_at: new Date().toISOString() },
+    { id: "cat-hum", name: "মানবিক", created_at: new Date().toISOString() },
+    { id: "cat-biz", name: "ব্যবসায়", created_at: new Date().toISOString() },
+    { id: "cat-oth", name: "অন্যান্য", created_at: new Date().toISOString() }
   ]
 };
 
@@ -201,6 +342,17 @@ function readDB(): LocalDB {
   try {
     const raw = fs.readFileSync(dbPath, "utf-8");
     const parsed = JSON.parse(raw);
+    
+    // Auto-inject our rich 8 courses and 4 expert teachers if database contains legacy 2-course setup
+    if (!parsed.courses || parsed.courses.length < 5) {
+      parsed.courses = DEFAULT_COURSES;
+      parsed.teachers = DEFAULT_TEACHERS;
+      parsed.categories = INITIAL_DB.categories; // ensure the categories mapping has গুচ্ছ Category matches ID cat-oth correctly
+      const updatedDB = { ...INITIAL_DB, ...parsed };
+      fs.writeFileSync(dbPath, JSON.stringify(updatedDB, null, 2), "utf-8");
+      return updatedDB;
+    }
+
     // Ensure nested fields remain intact
     return { ...INITIAL_DB, ...parsed };
   } catch (err) {
@@ -250,31 +402,40 @@ app.get("/api/config", async (req, res) => {
 
 // 2. Admin Login Verify
 app.post("/api/admin/login", async (req, res) => {
-  const { password } = req.body;
-  if (!password) {
-    return res.status(400).json({ error: "পাসওয়ার্ড দিতে হবে" });
-  }
+  try {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ error: "পাসওয়ার্ড দিতে হবে" });
+    }
 
-  const hash = getSHA256(password);
+    const hash = getSHA256(password);
 
-  if (supabaseClient) {
-    try {
-      const { data, error } = await supabaseClient.from("admin_config").select("*").maybeSingle();
-      if (!error && data) {
-        if (data.password_hash === hash || data.password_hash === password) {
-          return res.json({ token: data.password_hash, message: "লগইন সফল হয়েছে!" });
+    if (supabaseClient) {
+      try {
+        const { data, error } = await supabaseClient.from("admin_config").select("*").maybeSingle();
+        if (error) {
+          console.warn("Supabase admin_config error (falling back to local):", error.message);
+        } else if (data) {
+          if (data.password_hash === hash) {
+            return res.json({ token: data.password_hash, message: "লগইন সফল হয়েছে!" });
+          }
         }
+      } catch (err: any) {
+        console.warn("Supabase admin_config exception (falling back to local):", err?.message || err);
       }
-    } catch (_) {}
-  }
+    }
 
-  // Local fallback check
-  const db = readDB();
-  const actualHash = db.admin_config.password_hash;
-  if (hash === actualHash || password === "admin123") {
-    res.json({ token: actualHash, message: "লগইন সফল হয়েছে!" });
-  } else {
-    res.status(400).json({ error: "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।" });
+    // Local fallback check
+    const db = readDB();
+    const actualHash = db.admin_config.password_hash;
+    if (hash === actualHash) {
+      res.json({ token: actualHash, message: "লগইন সফল হয়েছে!" });
+    } else {
+      res.status(400).json({ error: "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।" });
+    }
+  } catch (err: any) {
+    console.error("Unhandled error in /api/admin/login:", err);
+    res.status(500).json({ error: `সার্ভার ত্রুটি: ${err?.message || err}` });
   }
 });
 
@@ -661,9 +822,11 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
     ...db.admin_config,
     facebook_url: payload.facebook_url || db.admin_config.facebook_url,
     youtube_url: payload.youtube_url || db.admin_config.youtube_url,
+    telegram_url: payload.telegram_url || db.admin_config.telegram_url || "",
     whatsapp_number: payload.whatsapp_number || db.admin_config.whatsapp_number,
     bkash_number: payload.bkash_number || db.admin_config.bkash_number,
     nagad_number: payload.nagad_number || db.admin_config.nagad_number,
+    rocket_number: payload.rocket_number || db.admin_config.rocket_number || "",
     about_text: payload.about_text || db.admin_config.about_text,
     about_mission: payload.about_mission || db.admin_config.about_mission,
     password_hash: newPasswordHash
@@ -683,9 +846,11 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         const insertRecord = {
           facebook_url: updatedConfig.facebook_url,
           youtube_url: updatedConfig.youtube_url,
+          telegram_url: updatedConfig.telegram_url,
           whatsapp_number: updatedConfig.whatsapp_number,
           bkash_number: updatedConfig.bkash_number,
           nagad_number: updatedConfig.nagad_number,
+          rocket_number: updatedConfig.rocket_number,
           about_text: updatedConfig.about_text,
           about_mission: updatedConfig.about_mission,
           password_hash: updatedConfig.password_hash
@@ -700,9 +865,11 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         const { error: updateErr } = await supabaseClient.from("admin_config").update({
           facebook_url: updatedConfig.facebook_url,
           youtube_url: updatedConfig.youtube_url,
+          telegram_url: updatedConfig.telegram_url,
           whatsapp_number: updatedConfig.whatsapp_number,
           bkash_number: updatedConfig.bkash_number,
           nagad_number: updatedConfig.nagad_number,
+          rocket_number: updatedConfig.rocket_number,
           about_text: updatedConfig.about_text,
           about_mission: updatedConfig.about_mission,
           password_hash: updatedConfig.password_hash
@@ -752,6 +919,121 @@ app.post("/api/admin/upload", adminAuth, (req, res) => {
     console.error("Upload error", err);
     res.status(500).json({ error: "ফাইল সেভ করতে ত্রুটি ঘটেছে।" });
   }
+});
+
+// 14. GET Category List (Public/Admin)
+app.get("/api/categories", async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("categories").select("*");
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  res.json(db.categories || []);
+});
+
+// 15. Create Category (Admin only)
+app.post("/api/admin/categories", adminAuth, async (req, res) => {
+  const { name } = req.body;
+  if (!name || name.trim() === "") {
+    return res.status(400).json({ error: "ক্যাটাগরির নাম দিন।" });
+  }
+
+  const record = {
+    id: crypto.randomUUID(),
+    name: name.trim(),
+    created_at: new Date().toISOString()
+  };
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("categories").insert(record);
+      if (!error) {
+        return res.json(record);
+      } else {
+        return res.status(400).json({ error: `Supabase ত্রুটি: ${error.message}` });
+      }
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
+  }
+
+  const db = readDB();
+  if (!db.categories) db.categories = [];
+  if (db.categories.some(c => c.name.toLowerCase() === record.name.toLowerCase())) {
+    return res.status(400).json({ error: "এই ক্যাটাগরিটি ইতিমধ্যে বিদ্যমান।" });
+  }
+
+  db.categories.push(record);
+  writeDB(db);
+  res.json(record);
+});
+
+// 16. Update Category (Admin only)
+app.put("/api/admin/categories/:id", adminAuth, async (req, res) => {
+  const cid = req.params.id;
+  const { name } = req.body;
+
+  if (!name || name.trim() === "") {
+    return res.status(400).json({ error: "ক্যাটাগরির নাম দিন।" });
+  }
+
+  const trimmedName = name.trim();
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("categories").update({ name: trimmedName }).eq("id", cid);
+      if (!error) {
+        return res.json({ id: cid, name: trimmedName });
+      } else {
+        return res.status(400).json({ error: `Supabase ত্রুটি: ${error.message}` });
+      }
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
+  }
+
+  const db = readDB();
+  if (!db.categories) db.categories = [];
+  
+  const idx = db.categories.findIndex(c => c.id === cid);
+  if (idx !== -1) {
+    if (db.categories.some((c, i) => i !== idx && c.name.toLowerCase() === trimmedName.toLowerCase())) {
+      return res.status(400).json({ error: "এই নামের আরেকটি ক্যাটাগরি ইতিমধ্যে বিদ্যমান।" });
+    }
+    db.categories[idx].name = trimmedName;
+    writeDB(db);
+    res.json(db.categories[idx]);
+  } else {
+    res.status(404).json({ error: "ক্যাটাগরি খুঁজে পাওয়া যায়নি।" });
+  }
+});
+
+// 17. Delete Category (Admin only)
+app.delete("/api/admin/categories/:id", adminAuth, async (req, res) => {
+  const cid = req.params.id;
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("categories").delete().eq("id", cid);
+      if (!error) {
+        return res.json({ success: true, message: "ক্যাটাগরি মুছে ফেলা হয়েছে।" });
+      } else {
+        return res.status(400).json({ error: `Supabase ত্রুটি: ${error.message}` });
+      }
+    } catch (e: any) {
+      return res.status(500).json({ error: `সার্ভার ত্রুটি: ${e.message}` });
+    }
+  }
+
+  const db = readDB();
+  if (!db.categories) db.categories = [];
+  db.categories = db.categories.filter(c => c.id !== cid);
+  writeDB(db);
+  res.json({ success: true, message: "ক্যাটাগরি মুছে ফেলা হয়েছে।" });
 });
 
 // Ensure uploaded files are accessible publicly at /uploads/...

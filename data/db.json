@@ -1,0 +1,312 @@
+{
+  "admin_config": {
+    "id": "config-default",
+    "password_hash": "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81",
+    "facebook_url": "https://www.facebook.com/share/1EuqVi7L7k/",
+    "youtube_url": "https://youtube.com/@prostuti-dhabi?si=YsK9AqNowX8shbXn",
+    "whatsapp_number": "01570238312",
+    "about_text": "আমরা ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষার জন্য সেরা প্রস্তুতি নিশ্চিত করি। আমাদের অভিজ্ঞ শিক্ষকমণ্ডলী ও গোছানো কারিকুলাম আপনাকে সাহায্য করবে আপনার কাঙ্ক্ষিত লক্ষ্যে পৌঁছাতে।",
+    "about_mission": "আমাদের মিশন হলো প্রতিটি শিক্ষার্থীর কাছে ঢাকা বিশ্ববিদ্যালয়ের স্বপ্নকে বাস্তবসম্মত ও সহজসাধ্য করে তোলা। সাশ্রয়ী মূল্যে মানসম্মত শিক্ষা প্রযুক্তির মাধ্যমে সবার কাছে পৌঁছে দেওয়া।",
+    "bkash_number": "01570238312",
+    "nagad_number": "01570238312",
+    "rocket_number": "01570238312",
+    "created_at": "2026-05-21T15:37:55.477Z"
+  },
+  "teachers": [
+    {
+      "id": "teacher-sajid",
+      "name": "ড. সাজিদ হাসান",
+      "subject": "রসায়ন ও গণিত",
+      "bio": "১০ বছরেরও বেশি সময় ধরে ঢাবি ভর্তি প্রত্যাশীদের মেন্টরশিপ করে আসছেন।",
+      "photo_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop",
+      "qualifications": "বিএসসি, এমএসসি (ঢাকা বিশ্ববিদ্যালয়), পিএইচডি (জাপান)",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "teacher-farhana",
+      "name": "অধ্যাপিকা ফারহানা চৌধুরী",
+      "subject": "বাংলা ও ইংরেজি সাহিত্য",
+      "bio": "ভর্তি সহায়ক অসংখ্য বইয়ের প্রণেতা এবং বিশ্ববিদ্যালয় ভর্তি কোচিংয়ের জনপ্রিয় শিক্ষক।",
+      "photo_url": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300&auto=format&fit=crop",
+      "qualifications": "বিএ (সরাসরি ১ম শ্রেণী), এমএ (ইংরেজি, ঢাবি)",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "teacher-manzur",
+      "name": "মনজুরুল ইসলাম",
+      "subject": "হিসাববিজ্ঞান ও ফিন্যান্স",
+      "bio": "৮ বছরের বেশি সময় কোচিং জগতে গ-ইউনিট বিশেষজ্ঞদের অন্যতম শীর্ষ মেন্টর।",
+      "photo_url": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=300&auto=format&fit=crop",
+      "qualifications": "বিবিএ, এমবিএ (হিসাববিজ্ঞান বিভাগ, ঢাকা বিশ্ববিদ্যালয়)",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "teacher-anika",
+      "name": "আনিকা তাসনিম",
+      "subject": "পদার্থবিজ্ঞান ও জীববিজ্ঞান",
+      "bio": "ভর্তি পরীক্ষার্থীদের জন্য সহজ কৌশলে কঠিন সূত্র ও তত্ত্ব মনে রাখার জাদুকরি ট্রেইনার।",
+      "photo_url": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=300&auto=format&fit=crop",
+      "qualifications": "এমবিবিএস (ঢাকা মেডিকেল কলেজ), বিএসসি (পদার্থবিজ্ঞান, ঢাবি)",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    }
+  ],
+  "courses": [
+    {
+      "id": "course-ka-unit-2025",
+      "title": "ঢাবি 'ক' ইউনিট সম্পূর্ণ ভর্তি প্রস্তুতি ২০২৫",
+      "short_description": "বিজ্ঞান বিভাগের শিক্ষার্থীদের জন্য পদার্থ, রসায়ন, গণিত ও জীববিজ্ঞানের নিখুঁত প্রস্তুতি কোর্স।",
+      "full_description": "ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিট ভর্তি পরীক্ষায় শতভাগ প্রস্তুতির লক্ষ্য নিয়ে এই কোর্সটি ডিজাইন করা হয়েছে। অভিজ্ঞ বিশ্ববিদ্যালয় পড়ুয়া মেন্টর এবং বুয়েট-মেডিকেল শিক্ষকমণ্ডলী দ্বারা পরিচালিত হবে ক্লাসসমূহ। কোর্সে থাকছে অধ্যায়ভিত্তিক প্রশ্নব্যাংক সমাধান, টেকনিক ক্লাস এবং নিয়মিত উইকলি ও ওএমআর ভিত্তিক মডেল টেস্ট।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop",
+      "price": 3500,
+      "duration": "৪ মাস",
+      "total_classes": 120,
+      "category": "বিজ্ঞান",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-sajid",
+        "teacher-anika"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "ক্যালকুলাস ও নিউটনীয় বলবিদ্যা",
+          "details": "অন্তরীকরণ ও যোগজীকরণ এর মূল নিয়মসমূহ এবং বলবিদ্যা পরীক্ষার প্রশ্ন ব্যাঙ্ক সমাধান।"
+        },
+        {
+          "week": "সপ্তাহ ২",
+          "topic": "জৈব রসায়ন ও সমতা",
+          "details": "অ্যালকেন, অ্যালকিন, অ্যালকাইন রিঅ্যাকশন মেকানিজম এবং গুরুত্বপূর্ণ রূপান্তরসমূহ।"
+        },
+        {
+          "week": "সপ্তাহ ৩",
+          "topic": "কোষ ও জিনতত্ত্ব",
+          "details": "ডিএনএ রেপ্লিকেশন, লিঙ্কড জিন এবং ডারউইন তত্ত্বের আধুনিক ব্যাখ্যা।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-medical-parallel",
+      "title": "মেডিকেল + ঢাবি 'ক' সমান্তরাল প্রস্তুতি ব্যাচ",
+      "short_description": "মেডিকেল ভর্তি প্রস্তুতি ও ঢাবি ক ইউনিটের পদার্থ-রসায়ন-জীববিজ্ঞান কভার ব্যাচ।",
+      "full_description": "যারা একই সাথে মেডিকেল এবং ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিটের প্রস্তুতি নিতে চান, তাদের জন্য দ্বিমুখী ফুল সিলেবাস বুস্টার ব্যাচ। চমৎকার শর্টকাট ট্রিক্স এবং বিস্তারিত আলোচনা যা আপনার উভয় পরীক্ষাতেই চান্স পাওয়ার সম্ভাবনা বহুগুণে বাড়িয়ে দিবে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=600&auto=format&fit=crop",
+      "price": 4200,
+      "duration": "৫ মাস",
+      "total_classes": 150,
+      "category": "বিজ্ঞান",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-anika",
+        "teacher-sajid"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "মানব শারীরতত্ত্ব ও প্রাণীর পরিচিতি",
+          "details": "পরিপাক, রক্ত সংবহন ও হাইড্রা সংলগ্ন গুরুত্বপূর্ণ মেডিকেল প্রশ্ন ব্যাখ্যা।"
+        },
+        {
+          "week": "সপ্তাহ ২",
+          "topic": "রাসায়নিক পরিবর্তনের গাণিতিক হ্যাকস",
+          "details": "pH হ্যাকস, বাফার সলিউশন এবং রাসায়নিক গণনা ট্রিক্স।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-kha-unit-2025",
+      "title": "ঢাবি 'খ' ইউনিট সমন্বিত মানবিক প্রস্তুতি",
+      "short_description": "বাংলা, ইংরেজি এবং অত্যন্ত তথ্যবহুল সাধারণ জ্ঞানের জন্য কমপ্লিট সলিউশন ব্যাচ।",
+      "full_description": "মানবিক বিভাগ থেকে যারা ঢাকা বিশ্ববিদ্যালয়ে স্বপ্ন দেখছেন, তাদের জন্য বাংলা এবং ইংরেজি ব্যাকরণ ও সাহিত্যের সাথে আন্তর্জাতিক ও বাংলাদেশ বিষয়ের সাধারণ জ্ঞান সম্পূর্ণ কভার করা হবে এই কোর্সে। প্রতিদিনের পড়া পরীক্ষা নিয়ে যাচাই করা হবে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?q=80&w=600&auto=format&fit=crop",
+      "price": 2800,
+      "duration": "৩ মাস",
+      "total_classes": 90,
+      "category": "মানবিক",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-farhana"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "বাংলা ব্যাকরণ ও প্রিপজিশন",
+          "details": "সন্ধি, সমাস ও English Prepositions masterclass."
+        },
+        {
+          "week": "সপ্তাহ ২",
+          "topic": "বাঙালির ইতিহাস ও সমসাময়িক সাধারণ জ্ঞান",
+          "details": "ভাষা আন্দোলন থেকে শুরু করে মুক্তিযুদ্ধ এবং বর্তমান মেগা প্রজেক্টসমূহ পর্যালোচনা।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-premium-english",
+      "title": "আইবিএ ও ঢাবি বি-ইউনিট প্রিমিয়াম ইংলিশ ব্যাচ",
+      "short_description": "English Grammar, Vocabulary, and Written preparation to build ultimate confidence.",
+      "full_description": "ঢাকা বিশ্ববিদ্যালয় এবং আইবিএ ভর্তি পরীক্ষার অন্যতম কঠিন অংশ ইংরেজি ভীতি দূর করার বিশেষ ব্যাচ। এই কোর্সে বেসিক গ্রামার থেকে শুরু করে অ্যাডভান্সড রিডিং কম্প্রিহেনশন ও রিটেন পার্টের খুঁটিনাটি শেখানো হবে অত্যন্ত সহজ আঙ্গিকে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?q=80&w=600&auto=format&fit=crop",
+      "price": 2000,
+      "duration": "২ মাস",
+      "total_classes": 45,
+      "category": "মানবিক",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-farhana"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "Subject-Verb Agreement & Parts of Speech",
+          "details": "পরীক্ষায় বারবার আসা গুরুত্বপূর্ণ ৫০টি রুলস ও সংশোধন পদ্ধতি।"
+        },
+        {
+          "week": "সপ্তাহ ২",
+          "topic": "Free Handwriting & Essay/Paragraph Writing",
+          "details": "রিটেন পার্টের কাঠামো এবং কীভাবে মানসম্মত ইংরেজি উত্তর লেখা যায়।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-ga-unit-2025",
+      "title": "ঢাবি 'গ' ইউনিট ব্যবসায় শিক্ষা চূড়ান্ত ভর্তি ব্যাচ",
+      "short_description": "Accounting, Management, Marketing/Finance ও English এর পূর্ণাঙ্গ প্রস্তুতি।",
+      "full_description": "ঢাকা বিশ্ববিদ্যালয়ের 'গ' ইউনিটে (ব্যবসায় শিক্ষা) চান্স পাওয়ার চূড়ান্ত সহায়ক ব্যাচ এটি। হিসাববিজ্ঞান ও ব্যবসায় নীতি বিষয়ের সকল অধ্যায়ের গাণিতিক ও তাত্ত্বিক সমস্যাগুলো অত্যন্ত সহজভাবে বিশ্লেষণ করা হবে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=600&auto=format&fit=crop",
+      "price": 3000,
+      "duration": "৩.৫ মাস",
+      "total_classes": 80,
+      "category": "ব্যবসায়",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-manzur",
+        "teacher-farhana"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "হিসাববিজ্ঞান পরিচিতি ও জাবেদা",
+          "details": "লেনদেনের দ্বিমুখী প্রভাব, হিসাব সমীকরণ এবং ডেবিট-ক্রেডিট বিশ্লেষণ।"
+        },
+        {
+          "week": "সপ্তাহ ২",
+          "topic": "ব্যবসায় সংগঠন ও আধুনিক ব্যবস্থাপনা",
+          "details": "শিল্প ও বাণিজ্য, অংশীদারি কারবারের খুঁটিনাটি আইনি জটিলতা।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-commerce-math",
+      "title": "ব্যবসায় গণিত এবং হিসাববিজ্ঞান স্পেশাল হ্যাকস",
+      "short_description": "হিসাববিজ্ঞানের ট্রিকি ম্যাথ ট্রিকস ও দ্রুত ক্যালকুলেশন ছাড়াই সমাধান করার মেথড।",
+      "full_description": "ক্যালকুলেটর ছাড়া জাবেদা, খতিয়ান, সমন্বয় দাখিলা ও দ্রুত গাণিতিক সমস্যার সমাধান করার ম্যাজিক্যাল হ্যাকস নিয়ে সাজানো মডিউল। কম সময়ে নিখুঁত মার্কস তোলার অব্যর্থ কৌশল শিখুন সরাসরি ঢাবি টপারদের থেকে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?q=80&w=600&auto=format&fit=crop",
+      "price": 1500,
+      "duration": "১.৫ মাস",
+      "total_classes": 30,
+      "category": "ব্যবসায়",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-manzur"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "অনুপাত বিশ্লেষণ ও আর্থিক বিবরণীর ট্রিক্স",
+          "details": "অনুপাত বিশ্লেষণ ও আর্থিক বিবরণীর কঠিন অংকগুলো শর্টকাটে করার ট্রিক্স।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-gst-combined",
+      "title": "জিএসটি গুচ্ছ (GST) ও রাবি/চবি সমন্বিত ব্যাচ",
+      "short_description": "২২টি সাধারণ বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয় এবং রাবি-চবির সেরা ভর্তি প্রস্তুতি ব্যাচ।",
+      "full_description": "গুচ্ছভুক্ত ২৪টি সাধারণ এবং বিজ্ঞান ও প্রযুক্তি বিশ্ববিদ্যালয়ের সমন্বিত 'ক', 'খ', 'গ' ইউনিট প্রস্তুতিতে সাহায্য করার উদ্দেশ্যে বিশেষভাবে ডিজাইনকৃত কোর্স। পূর্ণাঙ্গ শর্টকাট মেথড ও সিলেবাস কভারেজ নিশ্চিত করা হবে।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?q=80&w=600&auto=format&fit=crop",
+      "price": 2500,
+      "duration": "৩ মাস",
+      "total_classes": 75,
+      "category": "গুচ্ছ",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-sajid",
+        "teacher-farhana",
+        "teacher-anika"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "গুচ্ছভিত্তিক বহুনির্বাচনী প্রশ্নব্যাংক সমাধান",
+          "details": "রাবি, চবি এবং জিএসটি ওএমআর কাঠামোর তুলনামূলক আলোচনা।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "course-omr-model-test",
+      "title": "ভর্তি পরীক্ষা ওএমআর ভিত্তিক চূড়ান্ত মডেল টেস্ট সিরিজ",
+      "short_description": "দেশব্যাপী লাখো ভর্তিচ্ছু শিক্ষার্থীদের সঙ্গে ওএমআর মেধা যাচাই টেস্ট ও সলভ ক্লাস সিরিজ।",
+      "full_description": "অনলাইন এবং অফলাইন উভয় মাধ্যমে ভর্তি পরীক্ষার ঠিক আগে নিজেকে যাচাই করার জন্য ওএমআর ভিত্তিক চূড়ান্ত মডেল টেস্ট ব্যাচ। প্রতিটি মডেল টেস্টের শেষে থাকবে বিষয়ভিত্তিক সমাধান ক্লাস ও নেগেটিভ মার্কিং সহ রিয়েল-টাইম ড্যাশবোর্ড লিডারবোর্ড।",
+      "cover_photo_url": "https://images.unsplash.com/photo-1510712474076-eb51a4a821e1?q=80&w=600&auto=format&fit=crop",
+      "price": 1000,
+      "duration": "১ মাস",
+      "total_classes": 25,
+      "category": "গুচ্ছ",
+      "is_published": true,
+      "teacher_ids": [
+        "teacher-sajid",
+        "teacher-farhana",
+        "teacher-manzur",
+        "teacher-anika"
+      ],
+      "curriculum": [
+        {
+          "week": "সপ্তাহ ১",
+          "topic": "১০ সেট ওএমআর মডেল টেস্ট",
+          "details": "নেগেটিভ মার্কিং বিশ্লেষণের ওপর গুরুত্ব দিয়ে প্রস্তুতকৃত মডেল সলভ।"
+        }
+      ],
+      "created_at": "2026-05-21T18:27:01.028Z"
+    }
+  ],
+  "enrollments": [
+    {
+      "id": "enroll-example-1",
+      "course_id": "course-ka-unit-2025",
+      "student_name": "রাফসান জামিল",
+      "student_phone": "01822334455",
+      "payment_method": "bkash",
+      "payment_number": "01822334455",
+      "transaction_id": "TRX88299AJ33",
+      "status": "pending",
+      "created_at": "2026-05-21T15:37:55.477Z"
+    }
+  ],
+  "categories": [
+    {
+      "id": "cat-sci",
+      "name": "বিজ্ঞান",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "cat-hum",
+      "name": "মানবিক",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "cat-biz",
+      "name": "ব্যবসায়",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    },
+    {
+      "id": "cat-oth",
+      "name": "অন্যান্য",
+      "created_at": "2026-05-21T18:27:01.028Z"
+    }
+  ]
+}

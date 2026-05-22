@@ -40,6 +40,7 @@ import AdminSidebar from "./components/admin/AdminSidebar";
 import CourseForm from "./components/admin/CourseForm";
 import TeacherForm from "./components/admin/TeacherForm";
 import EnrollmentTable from "./components/admin/EnrollmentTable";
+import CategoryManager from "./components/admin/CategoryManager";
 
 export default function App() {
   // Views navigation router
@@ -50,6 +51,7 @@ export default function App() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [config, setConfig] = useState<Partial<AdminConfig> | null>(null);
   const [fetching, setFetching] = useState(true);
 
@@ -57,7 +59,11 @@ export default function App() {
   const [adminToken, setAdminToken] = useState<string>(() => {
     return localStorage.getItem("prostuti_dhabi_admin_token") || "";
   });
-  const [adminPasswordInput, setAdminPasswordInput] = useState("");
+  const [rememberAdmin, setRememberAdmin] = useState<boolean>(() => {
+    return localStorage.getItem("prostuti_remember_admin") === "true";
+  });
+  const [adminPasswordInput, setAdminPasswordInput] = useState<string>("");
+  const [showAdminPassword, setShowAdminPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState("");
   const [loggingIn, setLoggingIn] = useState(false);
 
@@ -73,9 +79,11 @@ export default function App() {
   // Admin Settings modifications states
   const [fbUrlInput, setFbUrlInput] = useState("");
   const [ytUrlInput, setYtUrlInput] = useState("");
+  const [tgUrlInput, setTgUrlInput] = useState("");
   const [waNumInput, setWaNumInput] = useState("");
   const [bkashNumInput, setBkashNumInput] = useState("");
   const [nagadNumInput, setNagadNumInput] = useState("");
+  const [rocketNumInput, setRocketNumInput] = useState("");
   const [aboutTextInput, setAboutTextInput] = useState("");
   const [aboutMissionInput, setAboutMissionInput] = useState("");
   const [adminNewPasswordInput, setAdminNewPasswordInput] = useState("");
@@ -95,9 +103,11 @@ export default function App() {
         // Pre-fill inputs for administrative configurations
         setFbUrlInput(configData.facebook_url || "");
         setYtUrlInput(configData.youtube_url || "");
+        setTgUrlInput(configData.telegram_url || "");
         setWaNumInput(configData.whatsapp_number || "");
         setBkashNumInput(configData.bkash_number || "");
         setNagadNumInput(configData.nagad_number || "");
+        setRocketNumInput(configData.rocket_number || "");
         setAboutTextInput(configData.about_text || "");
         setAboutMissionInput(configData.about_mission || "");
       }
@@ -114,6 +124,13 @@ export default function App() {
       if (teachersRes.ok) {
         const teachersData = await teachersRes.json();
         setTeachers(teachersData);
+      }
+
+      // 4. Categories list
+      const categoriesRes = await fetch("/api/categories");
+      if (categoriesRes.ok) {
+        const categoriesData = await categoriesRes.json();
+        setCategories(categoriesData);
       }
     } catch (err) {
       console.error("Error loading application states", err);
@@ -170,7 +187,14 @@ export default function App() {
         body: JSON.stringify({ password: adminPasswordInput })
       });
 
-      const resData = await response.json();
+      let resData: any = {};
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        resData = await response.json();
+      } else {
+        const textError = await response.text();
+        throw new Error(`সার্ভার থেকে ত্রুটিপূর্ণ রেসপন্স এসেছে (স্ট্যাটাস: ${response.status})। বিস্তারিত: ${textError.substring(0, 100)}`);
+      }
 
       if (!response.ok) {
         throw new Error(resData.error || "পাসওয়ার্ড সঠিক নয়।");
@@ -179,7 +203,14 @@ export default function App() {
       // Save token state
       localStorage.setItem("prostuti_dhabi_admin_token", resData.token);
       setAdminToken(resData.token);
+      
+      if (rememberAdmin) {
+        localStorage.setItem("prostuti_remember_admin", "true");
+      } else {
+        localStorage.removeItem("prostuti_remember_admin");
+      }
       setAdminPasswordInput("");
+
       setCurrentView("admin-dashboard");
       setActiveAdminTab("overview");
     } catch (error: any) {
@@ -193,6 +224,7 @@ export default function App() {
   const handleAdminLogout = () => {
     localStorage.removeItem("prostuti_dhabi_admin_token");
     setAdminToken("");
+    setAdminPasswordInput("");
     setCurrentView("home");
   };
 
@@ -366,9 +398,11 @@ export default function App() {
         body: JSON.stringify({
           facebook_url: fbUrlInput,
           youtube_url: ytUrlInput,
+          telegram_url: tgUrlInput,
           whatsapp_number: waNumInput,
           bkash_number: bkashNumInput,
           nagad_number: nagadNumInput,
+          rocket_number: rocketNumInput,
           about_text: aboutTextInput,
           about_mission: aboutMissionInput,
           new_password: adminNewPasswordInput
@@ -463,7 +497,7 @@ export default function App() {
               <HeroSection onSeeCourses={onSeeCourses} onSeeAbout={onSeeAbout} />
               
               {/* Courses Catalogue Grid */}
-              <CourseGrid courses={courses} onSelectCourse={(id) => handleViewChange("course-detail", id)} />
+              <CourseGrid courses={courses} categories={categories} onSelectCourse={(id) => handleViewChange("course-detail", id)} />
               
               {/* About US Background & Mission */}
               <AboutSection config={config} />
@@ -523,14 +557,40 @@ export default function App() {
 
                   <div className="space-y-1.5">
                     <label className="block text-xs sm:text-sm font-bold text-white/80">পাসওয়ার্ড দিন</label>
-                    <input
-                      type="password"
-                      required
-                      placeholder="অ্যাডমিন পাসওয়ার্ড লিখুন"
-                      value={adminPasswordInput}
-                      onChange={(e) => setAdminPasswordInput(e.target.value)}
-                      className="w-full text-xs sm:text-sm px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary text-white font-sans placeholder:text-white/30"
-                    />
+                    <div className="relative">
+                      <input
+                        type={showAdminPassword ? "text" : "password"}
+                        required
+                        placeholder="অ্যাডমিন পাসওয়ার্ড লিখুন"
+                        value={adminPasswordInput}
+                        onChange={(e) => setAdminPasswordInput(e.target.value)}
+                        className="w-full text-xs sm:text-sm pl-4 pr-11 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary text-white font-sans placeholder:text-white/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowAdminPassword(!showAdminPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition p-1"
+                        title={showAdminPassword ? "পাসওয়ার্ড লুকান" : "পাসওয়ার্ড দেখান"}
+                      >
+                        {showAdminPassword ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between py-1 text-xs sm:text-sm">
+                    <label className="flex items-center space-x-2 cursor-pointer select-none text-white/70 hover:text-white transition">
+                      <input
+                        type="checkbox"
+                        checked={rememberAdmin}
+                        onChange={(e) => setRememberAdmin(e.target.checked)}
+                        className="rounded border-white/20 bg-white/5 text-secondary focus:ring-0 focus:ring-offset-0 h-4 w-4 accent-secondary cursor-pointer"
+                      />
+                      <span>আমাকে মনে রাখুন</span>
+                    </label>
                   </div>
 
                   <button
@@ -582,6 +642,7 @@ export default function App() {
                     <h1 className="text-2xl sm:text-3xl font-black text-primary mt-1.5 leading-none">
                       {activeAdminTab === "overview" && "সারসংক্ষেপ ও ড্যাশবোর্ড"}
                       {activeAdminTab === "courses" && "কোর্স ক্রিয়েটর ও লিস্ট"}
+                      {activeAdminTab === "categories" && "কোর্স ক্যাটাগরি ও ফিল্টার"}
                       {activeAdminTab === "teachers" && "শিক্ষক পরিচিতি ও প্রোফাইল"}
                       {activeAdminTab === "enrollments" && "পেমেন্ট ডাটা ট্র্যাকিং"}
                       {activeAdminTab === "settings" && "সিস্টেম সেটিংস ও সামাজিক লিংক"}
@@ -688,6 +749,7 @@ export default function App() {
                       <CourseForm
                         course={editingCourse}
                         teachers={teachers}
+                        categories={categories}
                         adminToken={adminToken}
                         onCancel={() => {
                           setIsAddingCourse(false);
@@ -875,6 +937,21 @@ export default function App() {
                   </div>
                 )}
 
+                {/* TAB: CATEGORY MANAGER */}
+                {activeAdminTab === "categories" && (
+                  <CategoryManager
+                    adminToken={adminToken}
+                    categories={categories}
+                    onRefresh={async () => {
+                      const res = await fetch("/api/categories");
+                      if (res.ok) {
+                        const data = await res.json();
+                        setCategories(data);
+                      }
+                    }}
+                  />
+                )}
+
                 {/* TAB 4: ENROLLMENTS RECORDS */}
                 {activeAdminTab === "enrollments" && (
                   <div className="bg-white rounded-2xl border border-primary/5 shadow-xs p-6">
@@ -909,7 +986,7 @@ export default function App() {
                       <h4 className="font-extrabold text-primary text-base border-b border-primary/5 pb-2">
                         ১. হেল্পলাইন ও পেমেন্ট মার্চেন্ট নম্বর
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs sm:text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs sm:text-sm">
                         {/* bKash */}
                         <div>
                           <label className="block text-xs font-bold text-dark mb-1.5">বিকাশ পার্সোনাল নম্বর</label>
@@ -930,8 +1007,18 @@ export default function App() {
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>
+                        {/* Rocket */}
+                        <div>
+                          <label className="block text-xs font-bold text-dark mb-1.5">রকেট পার্সোনাল নম্বর</label>
+                          <input
+                            type="text"
+                            value={rocketNumInput}
+                            onChange={(e) => setRocketNumInput(e.target.value)}
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
                         {/* WhatsApp Helpline */}
-                        <div className="sm:col-span-2">
+                        <div className="sm:col-span-3">
                           <label className="block text-xs font-bold text-dark mb-1.5">হোয়াটসঅ্যাপ কন্টাক্ট নম্বর</label>
                           <input
                             type="text"
@@ -948,7 +1035,7 @@ export default function App() {
                       <h4 className="font-extrabold text-primary text-base border-b border-primary/5 pb-2">
                         ২. সামাজিক কন্টাক্ট ইউআরএল
                       </h4>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 text-xs sm:text-sm">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 text-xs sm:text-sm">
                         {/* Facebook URL */}
                         <div>
                           <label className="block text-xs font-bold text-dark mb-1.5">ফেসবুক গ্রুপ/পেইজ লিংক</label>
@@ -966,6 +1053,17 @@ export default function App() {
                             type="url"
                             value={ytUrlInput}
                             onChange={(e) => setYtUrlInput(e.target.value)}
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
+                        {/* Telegram URL */}
+                        <div>
+                          <label className="block text-xs font-bold text-dark mb-1.5">টেলিগ্রাম চ্যানেল/গ্রুপ লিংক</label>
+                          <input
+                            type="url"
+                            value={tgUrlInput}
+                            onChange={(e) => setTgUrlInput(e.target.value)}
+                            placeholder="যেমন: https://t.me/yourchannel"
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>

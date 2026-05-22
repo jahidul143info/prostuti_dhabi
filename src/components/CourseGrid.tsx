@@ -5,14 +5,20 @@ import { Search, SlidersHorizontal } from "lucide-react";
 
 interface CourseGridProps {
   courses: Course[];
+  categories?: Array<{ id: string; name: string }>;
   onSelectCourse: (id: string) => void;
 }
 
-export default function CourseGrid({ courses, onSelectCourse }: CourseGridProps) {
+export default function CourseGrid({ courses, categories = [], onSelectCourse }: CourseGridProps) {
   const [activeCategory, setActiveCategory] = useState("সকল");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const categories = ["সকল", "বিজ্ঞান", "মানবিক", "ব্যবসায়", "অন্যান্য"];
+  const filterCategories = useMemo(() => {
+    const list = categories.length > 0 
+      ? categories.map(c => c.name) 
+      : ["বিজ্ঞান", "মানবিক", "ব্যবসায়", "অন্যান্য"];
+    return ["সকল", ...list];
+  }, [categories]);
 
   const filteredCourses = useMemo(() => {
     return courses.filter((course) => {
@@ -45,7 +51,7 @@ export default function CourseGrid({ courses, onSelectCourse }: CourseGridProps)
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10 pb-6 border-b border-primary/5">
           {/* Quick Tabs filters */}
           <div className="flex items-center space-x-1.5 overflow-x-auto py-1 scrollbar-none" id="course-filter-panel">
-            {categories.map((cat) => (
+            {filterCategories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
