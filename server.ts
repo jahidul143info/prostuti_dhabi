@@ -43,11 +43,11 @@ function getSHA256(text: string): string {
 }
 
 // Check if Supabase keys exist
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
 if (supabaseUrl) {
   supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "");
 }
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const hasSupabase = supabaseUrl !== "" && supabaseServiceKey !== "" && !supabaseUrl.includes("your_supabase_url");
 
 let supabaseClient: any = null;
