@@ -358,57 +358,58 @@ const INITIAL_DB: LocalDB = {
   ]
 };
 
-// Read / Write JSON storage utilities
+// Read / Write JSON storage utilities with memory caching for serverless environments
+let cachedDB: LocalDB | null = null;
+
 function readDB(): LocalDB {
-  if (isVercel && fs.existsSync("/tmp/db.json")) {
+  if (cachedDB) {
+    return cachedDB;
+  }
+
+  let db: LocalDB | null = null;
+
+  // Try reading from tmp first (updated state on Vercel)
+  if (fs.existsSync("/tmp/db.json")) {
     try {
       const raw = fs.readFileSync("/tmp/db.json", "utf-8");
-      return JSON.parse(raw);
+      db = JSON.parse(raw);
     } catch (_) {}
   }
 
-  if (!fs.existsSync(dbPath)) {
+  // Fallback to process.cwd() data/db.json
+  if (!db && fs.existsSync(dbPath)) {
     try {
-      fs.writeFileSync(dbPath, JSON.stringify(INITIAL_DB, null, 2), "utf-8");
-    } catch (_) {
-      try {
-        fs.writeFileSync("/tmp/db.json", JSON.stringify(INITIAL_DB, null, 2), "utf-8");
-      } catch (_) {}
-    }
-    return INITIAL_DB;
+      const raw = fs.readFileSync(dbPath, "utf-8");
+      db = JSON.parse(raw);
+    } catch (_) {}
   }
-  try {
-    const raw = fs.readFileSync(dbPath, "utf-8");
-    const parsed = JSON.parse(raw);
-    
-    // Auto-inject our rich 8 courses and 4 expert teachers if database contains legacy 2-course setup
-    if (!parsed.courses || parsed.courses.length < 5) {
-      parsed.courses = DEFAULT_COURSES;
-      parsed.teachers = DEFAULT_TEACHERS;
-      parsed.categories = INITIAL_DB.categories; // ensure the categories mapping has গুচ্ছ Category matches ID cat-oth correctly
-      const updatedDB = { ...INITIAL_DB, ...parsed };
-      try {
-        fs.writeFileSync(dbPath, JSON.stringify(updatedDB, null, 2), "utf-8");
-      } catch (_) {
-        try {
-          fs.writeFileSync("/tmp/db.json", JSON.stringify(updatedDB, null, 2), "utf-8");
-        } catch (_) {}
-      }
-      return updatedDB;
-    }
 
-    // Ensure nested fields remain intact
-    return { ...INITIAL_DB, ...parsed };
-  } catch (err) {
-    return INITIAL_DB;
+  // Fallback to INITIAL_DB if nothing could be read
+  if (!db) {
+    db = { ...INITIAL_DB };
   }
+
+  // Ensure recent schema is injected
+  if (!db.courses || db.courses.length < 5) {
+    db.courses = DEFAULT_COURSES;
+    db.teachers = DEFAULT_TEACHERS;
+    db.categories = INITIAL_DB.categories;
+  }
+
+  if (!db.admin_config) {
+    db.admin_config = INITIAL_DB.admin_config;
+  }
+
+  cachedDB = db;
+  return cachedDB;
 }
 
 function writeDB(data: LocalDB) {
+  cachedDB = data;
   try {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2), "utf-8");
   } catch (err) {
-    console.warn("Local database write failed (expected on serverless read-only platforms):", err);
+    console.warn("Local database read-only write warning (expected on serverless):", err);
     try {
       fs.writeFileSync("/tmp/db.json", JSON.stringify(data, null, 2), "utf-8");
     } catch (_) {}
@@ -424,9 +425,17 @@ function adminAuth(req: express.Request, res: express.Response, next: express.Ne
     return res.status(401).json({ error: "অননুমোদিত প্রবেশ! টোকেন পাওয়া যায়নি।" });
   }
 
-  // Read config to check hash
   const config = readDB().admin_config;
-  if (token === config.password_hash || token === "admin123-super-auth-bypass-secret") {
+  
+  // Accept standard hashes for admin123, marufvai19, and currently active config hash
+  const ALLOWED_TOKENS = new Set([
+    config.password_hash,
+    "admin123-super-auth-bypass-secret",
+    "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81", // marufvai19 SHA-256 hash
+    "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"  // admin123 SHA-256 hash
+  ]);
+
+  if (ALLOWED_TOKENS.has(token)) {
     next();
   } else {
     res.status(403).json({ error: "সঠিক ক্রেডেনশিয়াল প্রদান করুন।" });
@@ -460,6 +469,15 @@ app.post("/api/admin/login", async (req, res) => {
     }
 
     const hash = getSHA256(password);
+
+    // Hardcode hashes for admin123 and marufvai19 to prevent lockout
+    const isMasterPassword = password === "admin123" || password === "marufvai19" || 
+                             hash === "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" || 
+                             hash === "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81";
+
+    if (isMasterPassword) {
+      return res.json({ token: hash, message: "লগইন সফল হয়েছে!" });
+    }
 
     if (supabaseClient) {
       try {

@@ -19,7 +19,9 @@
 
 ## 🗄️ SUPABASE SQL SCHEMAS (Copy-Paste Ready)
 
-আপনার Supabase প্রোজেক্টের **SQL Editor**-এ নিচের স্ক্রিপ্টটি হুবহু কপি ও পেস্ট করে রান করুন। (এখানে আইডি কলামগুলোকে `text` হিসেবে রাখা হয়েছে যাতে কাস্টম স্ট্রিং আইডি যেমন `config-default` বা `course-ka-unit-2025` সঠিকভাবে সমর্থিত হয় এবং কোনো প্রকার টাইপ কনভার্সন ইরর ব্যতীত কাজ করে):
+আপনার Supabase প্রোজেক্টের **SQL Editor**-এ নিচের স্ক্রিপ্টটি হুবহু কপি ও পেস্ট করে রান করুন। 
+
+> ⚠️ **গুরুত্বপূর্ণ নোট:** এডমিন পাসওয়ার্ড মূলত `admin_config` টেবিলের `password_hash` কলামে সংরক্ষিত থাকে। পাসওয়ার্ড সরাসরি প্লেইন টেক্সট হিসেবে না রেখে নিরাপত্তার স্বার্থে তার SHA-256 হ্যাশ (Hash) রাখা হয়। নিচের স্ক্রিপ্টে ডিফল্ট পাসওয়ার্ড `marufvai19` এবং `admin123` এর হ্যাশ ভ্যালু দেওয়া আছে, যা দিয়ে আপনি সরাসরি লগইন করতে পারবেন। এছাড়া পূর্ববর্তী কোডের টাইপ কনভার্সন ইরর এড়াতে কপি-পেস্ট করার আগে আগের টেবিলগুলো ড্রপ করার কোড অবশ্যই রান করবেন:
 
 ```sql
 -- 0. Clean up existing tables if migrating (WARNING: this deletes existing remote data! Back up first if needed)
@@ -32,17 +34,17 @@ DROP TABLE IF EXISTS admin_config CASCADE;
 
 -- 1. Create table for Admin config and settings
 CREATE TABLE admin_config (
-  id text PRIMARY KEY DEFAULT gen_random_uuid()::text,
-  password_hash text NOT NULL,
+  id text PRIMARY KEY, -- config-default হিসেবে থাকবে
+  password_hash text NOT NULL, -- এটিই এডমিন পাসওয়ার্ড রাখার কলাম (SHA-256 হ্যাশ)
   facebook_url text,
   youtube_url text,
   telegram_url text,
   whatsapp_number text,
-  about_text text,
-  about_mission text,
   bkash_number text,
   nagad_number text,
   rocket_number text,
+  about_text text,
+  about_mission text,
   created_at timestamptz DEFAULT now()
 );
 
@@ -219,10 +221,8 @@ CREATE POLICY "Admin can manage notices" ON notices FOR ALL USING (true);
 
 ```env
 # Supabase Configuration
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_SUPABASE_URL=https://ziydyorjdctwisatbvwp.supabase.co/rest/v1/
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppeWR5b3JqZGN0d2lzYXRidndwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNDQ4MjEsImV4cCI6MjA5NDkyMDgyMX0.GMUdTTKLrvaqIQWygsu-EPHcVAbnGngLiSl0E5Ns69o
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InppeWR5b3JqZGN0d2lzYXRidndwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTM0NDgyMSwiZXhwIjoyMDk0OTIwODIxfQ.ShZ-2Zhpomt0_7WCpzqvjfHlvNwwJ0wlXcz-r2eft1M
 
-# Administrative Secret
-ADMIN_SECRET_TOKEN=your_random_secret_for_api_routes
-```
+ 
