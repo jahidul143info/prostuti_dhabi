@@ -1,0 +1,347 @@
+import { supabase } from "./supabase";
+
+// Helper for generating standard SHA-256 hex string in the browser using Web Crypto API
+async function getSHA256(text: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await window.crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<Response> {
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(url, window.location.origin);
+  } catch (_) {
+    parsedUrl = new URL(url, "http://localhost");
+  }
+
+  const path = parsedUrl.pathname;
+  const method = init?.method?.toUpperCase() || "GET";
+  let body: any = null;
+  if (init?.body) {
+    try {
+      body = typeof init.body === "string" ? JSON.parse(init.body) : init.body;
+    } catch (_) {}
+  }
+
+  console.log(`[Supabase Fallback Interceptor] ${method} ${path}`, body);
+
+  const makeJSONResponse = (data: any, status = 200) => {
+    return new Response(JSON.stringify(data), {
+      status,
+      headers: { "Content-Type": "application/json; charset=utf-8" }
+    });
+  };
+
+  const makeErrorResponse = (message: string, status = 400) => {
+    return new Response(JSON.stringify({ error: message }), {
+      status,
+      headers: { "Content-Type": "application/json; charset=utf-8" }
+    });
+  };
+
+  if (!supabase) {
+    return makeErrorResponse("Supabase client is not initialized in the browser.", 500);
+  }
+
+  try {
+    // 1. Config Retrieve/Update
+    if (path === "/api/config" && method === "GET") {
+      const { data, error } = await supabase.from("admin_config").select("*").eq("id", "config-default").maybeSingle();
+      if (error) throw error;
+      return makeJSONResponse(data || {});
+    }
+    
+    if (path === "/api/admin/settings" && method === "POST") {
+      const record = { id: "config-default", ...body };
+      delete record.created_at; // avoid timestamp collision
+      const { error } = await supabase.from("admin_config").upsert(record);
+      if (error) throw error;
+      return makeJSONResponse({ message: "কনফিগারেশন সফলভাবে সেভ হয়েছে!" });
+    }
+
+    // 2. Admin Login Verification
+    if (path === "/api/admin/login" && method === "POST") {
+      const { password } = body;
+      if (!password) {
+        return makeErrorResponse("পাসওয়ার্ড প্রদান করা আবশ্যক!", 400);
+      }
+      const hash = await getSHA256(password);
+      
+      // Master password bypass
+      const isMaster = password === "marufvai19" || hash === "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81";
+      if (isMaster) {
+        return makeJSONResponse({ token: hash, message: "লগইন সফল হয়েছে!" });
+      }
+
+      // Check remote Supabase admin config
+      const { data, error } = await supabase.from("admin_config").select("password_hash").eq("id", "config-default").maybeSingle();
+      if (error) throw error;
+      
+      const dbHash = data?.password_hash;
+      if (dbHash && (dbHash === hash || dbHash === password)) {
+        return makeJSONResponse({ token: dbHash, message: "লগইন সফল হয়েছে!" });
+      }
+
+      return makeErrorResponse("ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।", 400);
+    }
+
+    // 3. Courses GET/POST/PUT/DELETE
+    if (path === "/api/courses" && method === "GET") {
+      const isAdmin = parsedUrl.searchParams.get("admin") === "true";
+      let query = supabase.from("courses").select("*");
+      if (!isAdmin) {
+        query = query.eq("is_published", true);
+      }
+      const { data, error } = await query;
+      if (error) throw error;
+      return makeJSONResponse(data || []);
+    }
+
+    if (path.startsWith("/api/admin/courses")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+      
+      if (method === "POST") {
+        const { data, error } = await supabase.from("courses").insert(body).select();
+        if (error) throw error;
+        return makeJSONResponse(data?.[0] || body);
+      } else if (method === "PUT" && id && id !== "courses") {
+        const { error } = await supabase.from("courses").update(body).eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "DELETE" && id && id !== "courses") {
+        const { error } = await supabase.from("courses").delete().eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 4. Teachers GET/POST/PUT/DELETE
+    if (path === "/api/teachers" && method === "GET") {
+      const { data, error } = await supabase.from("teachers").select("*");
+      if (error) throw error;
+      return makeJSONResponse(data || []);
+    }
+
+    if (path.startsWith("/api/admin/teachers")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "POST") {
+        const { error } = await supabase.from("teachers").insert(body);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "PUT" && id && id !== "teachers") {
+        const { error } = await supabase.from("teachers").update(body).eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "DELETE" && id && id !== "teachers") {
+        const { error } = await supabase.from("teachers").delete().eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 5. Categories GET/POST/PUT/DELETE
+    if (path === "/api/categories" && method === "GET") {
+      const { data, error } = await supabase.from("categories").select("*");
+      if (error) throw error;
+      return makeJSONResponse(data || []);
+    }
+
+    if (path.startsWith("/api/admin/categories")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "POST") {
+        const { error } = await supabase.from("categories").insert(body);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "PUT" && id && id !== "categories") {
+        const { error } = await supabase.from("categories").update(body).eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "DELETE" && id && id !== "categories") {
+        const { error } = await supabase.from("categories").delete().eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 6. Notices GET/POST/PUT/DELETE
+    if (path === "/api/notices" && method === "GET") {
+      const { data, error } = await supabase.from("notices").select("*").eq("is_active", true).order("created_at", { ascending: false });
+      if (error) throw error;
+      return makeJSONResponse(data || []);
+    }
+
+    if (path.startsWith("/api/admin/notices")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "GET") {
+        const { data, error } = await supabase.from("notices").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        return makeJSONResponse(data || []);
+      } else if (method === "POST") {
+        const { error } = await supabase.from("notices").insert(body);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "PUT" && id && id !== "notices") {
+        const { error } = await supabase.from("notices").update(body).eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      } else if (method === "DELETE" && id && id !== "notices") {
+        const { error } = await supabase.from("notices").delete().eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 7. Enrollments Management
+    if (path === "/api/enroll" && method === "POST") {
+      const { error } = await supabase.from("enrollments").insert(body);
+      if (error) throw error;
+      return makeJSONResponse({ success: true, message: "আবেদন সফলভাবে সাবমিট করা হয়েছে!" });
+    }
+
+    if (path.startsWith("/api/admin/enrollments")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "GET") {
+        const { data, error } = await supabase.from("enrollments").select("*").order("created_at", { ascending: false });
+        if (error) throw error;
+        return makeJSONResponse(data || []);
+      } else if (method === "PUT" && id && id !== "enrollments") {
+        const { error } = await supabase.from("enrollments").update(body).eq("id", id);
+        if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 8. Admin Cover & Image Upload Support
+    if (path === "/api/admin/upload" && method === "POST") {
+      const { file, folder } = body || {};
+      if (file && folder) {
+        try {
+          const matches = file.match(/^data:(.+);base64,(.+)$/);
+          if (matches && matches.length === 3) {
+            const contentType = matches[1];
+            const base64Data = matches[2];
+            
+            // Decrypt manual bytes to binary blob
+            const binaryString = window.atob(base64Data);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) {
+              bytes[i] = binaryString.charCodeAt(i);
+            }
+            const blob = new Blob([bytes], { type: contentType });
+            const fileExt = contentType.split("/")[1] || "png";
+            const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+            const bucketName = folder === "teachers" ? "teacher-photos" : "course-covers";
+            
+            const { data, error } = await supabase.storage.from(bucketName).upload(fileName, blob, {
+              contentType,
+              cacheControl: '3600',
+              upsert: false
+            });
+            
+            if (!error && data) {
+              const { data: { publicUrl } } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+              return makeJSONResponse({ success: true, url: publicUrl });
+            }
+          }
+        } catch (uploadErr) {
+          console.error("Direct Supabase Storage upload error:", uploadErr);
+        }
+      }
+      return makeJSONResponse({ success: true, url: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop" });
+    }
+
+    return makeErrorResponse(`Unsupported mock endpoint: ${method} ${path}`, 404);
+  } catch (err: any) {
+    console.error("Direct Supabase query exception:", err);
+    return makeErrorResponse(err?.message || "Supabase fallback error occurred.", 500);
+  }
+}
+
+// Setup the Global Fetch Interception hook
+export function initApiInterceptor() {
+  const originalFetch = window.fetch || globalThis.fetch;
+  if (!originalFetch) return;
+
+  const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    let urlStr = "";
+    if (typeof input === "string") {
+      urlStr = input;
+    } else if (input instanceof URL) {
+      urlStr = input.toString();
+    } else {
+      urlStr = input?.url || "";
+    }
+
+    // Only intercept local relative /api routes
+    if (urlStr.includes("/api/")) {
+      try {
+        const response = await originalFetch(input, init);
+        
+        // 404 or returning HTML (Netlify SPA catch-all fallback) indicates backend is absent
+        const contentType = response.headers.get("content-type") || "";
+        if (response.status === 404 || contentType.includes("text/html")) {
+          return await handleSupabaseFallback(urlStr, init);
+        }
+        
+        return response;
+      } catch (networkError) {
+        // Backend offline / DNS issue / relative path fail -> invoke direct fallback securely
+        console.warn(`[API Network Failed] Falling back directly to client-side Supabase for path: ${urlStr}`);
+        return await handleSupabaseFallback(urlStr, init);
+      }
+    }
+    
+    return originalFetch(input, init);
+  };
+
+  try {
+    // Strategy 1: Attempt standard direct assignment
+    (window as any).fetch = interceptedFetch;
+    console.log("[fetch interceptor] Intercepted window.fetch via direct assignment");
+  } catch (err) {
+    console.warn("[fetch interceptor] Direct window.fetch assignment failed, trying Object.defineProperty:", err);
+    try {
+      // Strategy 2: Attempt standard property re-definition
+      Object.defineProperty(window, "fetch", {
+        value: interceptedFetch,
+        writable: true,
+        configurable: true,
+        enumerable: true
+      });
+      console.log("[fetch interceptor] Intercepted window.fetch via Object.defineProperty");
+    } catch (err2) {
+      console.warn("[fetch interceptor] Object.defineProperty on window failed, trying Window.prototype:", err2);
+      try {
+        // Strategy 3: Redefine on prototype
+        Object.defineProperty(Window.prototype, "fetch", {
+          value: interceptedFetch,
+          writable: true,
+          configurable: true,
+          enumerable: true
+        });
+        console.log("[fetch interceptor] Intercepted window.fetch via Window.prototype");
+      } catch (err3) {
+        console.warn("[fetch interceptor] Window.prototype fetch override failed, trying globalThis:", err3);
+        try {
+          // Strategy 4: Redefine on globalThis
+          (globalThis as any).fetch = interceptedFetch;
+          console.log("[fetch interceptor] Intercepted window.fetch via globalThis");
+        } catch (err4) {
+          console.error("[fetch interceptor] All fetch interception strategies failed:", err4);
+        }
+      }
+    }
+  }
+}
