@@ -42,11 +42,11 @@ function getSHA256(text: string): string {
 }
 
 // Check if Supabase keys exist and clean them of leading/trailing whitespaces, newlines or quotes from copy-paste
-let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").trim().replace(/^['"]|['"]$/g, "");
+let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || "").trim().replace(/^['"]|['"]$/g, "");
 if (supabaseUrl) {
   supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "").trim();
 }
-let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim().replace(/^['"]|['"]$/g, "");
+let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || "").trim().replace(/^['"]|['"]$/g, "");
 
 const hasSupabase = 
   supabaseUrl !== "" && 
@@ -501,6 +501,76 @@ app.get("/api/config", async (req, res) => {
   const db = readDB();
   const { password_hash, ...safeConfig } = db.admin_config;
   res.json(safeConfig);
+});
+
+// Diagnostic Debug route to verify Supabase configuration and connectivity
+app.get("/api/admin/debug", async (req, res) => {
+  const result: any = {
+    isVercel,
+    nodeVersion: process.version,
+    envKeysPresent: {
+      NEXT_PUBLIC_SUPABASE_URL: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      SUPABASE_URL: !!process.env.SUPABASE_URL,
+      VITE_SUPABASE_URL: !!process.env.VITE_SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      SUPABASE_ANON_KEY: !!process.env.SUPABASE_ANON_KEY,
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      VITE_SUPABASE_ANON_KEY: !!process.env.VITE_SUPABASE_ANON_KEY,
+    },
+    resolvedConfig: {
+      supabaseUrlLength: supabaseUrl ? supabaseUrl.length : 0,
+      supabaseUrlObfuscated: supabaseUrl ? `${supabaseUrl.substring(0, 15)}...${supabaseUrl.substring(supabaseUrl.length - 5)}` : "empty",
+      supabaseServiceKeyLength: supabaseServiceKey ? supabaseServiceKey.length : 0,
+      hasSupabase,
+      hasSupabaseClient: !!supabaseClient
+    }
+  };
+
+  if (supabaseClient) {
+    try {
+      const start = Date.now();
+      const { data, error } = await supabaseClient.from("admin_config").select("id").limit(1);
+      const elapsed = Date.now() - start;
+      result.databaseTest = {
+        success: !error,
+        error: error ? { message: error.message, details: error.details, code: error.code } : null,
+        data,
+        elapsedMs: elapsed
+      };
+    } catch (dbErr: any) {
+      result.databaseTest = {
+        success: false,
+        error: { message: dbErr?.message || dbErr, stack: dbErr?.stack }
+      };
+    }
+
+    try {
+      result.authTest = {
+        hasAuth: !!supabaseClient.auth,
+        methods: Object.keys(supabaseClient.auth || {})
+      };
+    } catch (authErr: any) {
+      result.authTest = {
+        success: false,
+        error: { message: authErr?.message || authErr }
+      };
+    }
+  } else {
+    result.databaseTest = "Supabase client not initialized - falling back to Local JSON DB";
+  }
+
+  try {
+    result.dataFolder = {
+      exists: fs.existsSync(dataDir),
+      files: fs.existsSync(dataDir) ? fs.readdirSync(dataDir) : []
+    };
+  } catch (fsErr: any) {
+    result.dataFolder = {
+      error: fsErr?.message || fsErr
+    };
+  }
+
+  res.json(result);
 });
 
 // 2. Admin Login Verify
