@@ -49,17 +49,43 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
   try {
     // 1. Config Retrieve/Update
     if (path === "/api/config" && method === "GET") {
-      const { data, error } = await supabase.from("admin_config").select("*").eq("id", "config-default").maybeSingle();
+      const { data, error } = await supabase.from("admin_config").select("*").maybeSingle();
       if (error) throw error;
-      return makeJSONResponse(data || {});
+      const safeData = data ? { ...data, password_hash: undefined } : {};
+      return makeJSONResponse(safeData);
     }
     
-    if (path === "/api/admin/settings" && method === "POST") {
-      const record = { id: "config-default", ...body };
-      delete record.created_at; // avoid timestamp collision
-      const { error } = await supabase.from("admin_config").upsert(record);
-      if (error) throw error;
-      return makeJSONResponse({ message: "কনফিগারেশন সফলভাবে সেভ হয়েছে!" });
+    if (path === "/api/admin/settings" && (method === "POST" || method === "PUT")) {
+      const { data: dbRow } = await supabase.from("admin_config").select("*").maybeSingle();
+      
+      let currentPasswordHash = dbRow?.password_hash || "marufvai19";
+      let newPasswordHash = currentPasswordHash;
+      if (body.new_password && body.new_password.trim() !== "") {
+        newPasswordHash = body.new_password.trim();
+      }
+
+      const record = {
+        facebook_url: body.facebook_url !== undefined ? body.facebook_url : (dbRow?.facebook_url || ""),
+        youtube_url: body.youtube_url !== undefined ? body.youtube_url : (dbRow?.youtube_url || ""),
+        telegram_url: body.telegram_url !== undefined ? body.telegram_url : (dbRow?.telegram_url || ""),
+        whatsapp_number: body.whatsapp_number !== undefined ? body.whatsapp_number : (dbRow?.whatsapp_number || ""),
+        bkash_number: body.bkash_number !== undefined ? body.bkash_number : (dbRow?.bkash_number || ""),
+        nagad_number: body.nagad_number !== undefined ? body.nagad_number : (dbRow?.nagad_number || ""),
+        rocket_number: body.rocket_number !== undefined ? body.rocket_number : (dbRow?.rocket_number || ""),
+        about_text: body.about_text !== undefined ? body.about_text : (dbRow?.about_text || ""),
+        about_mission: body.about_mission !== undefined ? body.about_mission : (dbRow?.about_mission || ""),
+        password_hash: newPasswordHash
+      };
+
+      if (dbRow) {
+        const { error } = await supabase.from("admin_config").update(record).eq("id", dbRow.id);
+        if (error) throw error;
+      } else {
+        const insertRecord = { id: "config-default", ...record };
+        const { error } = await supabase.from("admin_config").insert(insertRecord);
+        if (error) throw error;
+      }
+      return makeJSONResponse({ message: "কনফিগারেশন সফলভাবে সেভ হয়েছে!", config: { ...record, password_hash: undefined } });
     }
 
     // 2. Admin Login Verification
@@ -77,7 +103,7 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       }
 
       // Check remote Supabase admin config
-      const { data, error } = await supabase.from("admin_config").select("password_hash").eq("id", "config-default").maybeSingle();
+      const { data, error } = await supabase.from("admin_config").select("password_hash").maybeSingle();
       if (error) throw error;
       
       const dbHash = data?.password_hash;
