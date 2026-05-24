@@ -2,7 +2,6 @@ import express from "express";
 import path from "path";
 import fs from "fs";
 import crypto from "crypto";
-import { createServer as createViteServer } from "vite";
 import { createClient } from "@supabase/supabase-js";
 
 // Load dotenv
@@ -42,13 +41,21 @@ function getSHA256(text: string): string {
   return crypto.createHash("sha256").update(text).digest("hex");
 }
 
-// Check if Supabase keys exist
-let supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "";
+// Check if Supabase keys exist and clean them of leading/trailing whitespaces, newlines or quotes from copy-paste
+let supabaseUrl = (process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL || "").trim().replace(/^['"]|['"]$/g, "");
 if (supabaseUrl) {
-  supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "");
+  supabaseUrl = supabaseUrl.replace(/\/rest\/v1\/?$/, "").trim();
 }
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-const hasSupabase = supabaseUrl !== "" && supabaseServiceKey !== "" && !supabaseUrl.includes("your_supabase_url");
+let supabaseServiceKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "").trim().replace(/^['"]|['"]$/g, "");
+
+const hasSupabase = 
+  supabaseUrl !== "" && 
+  supabaseUrl !== "undefined" && 
+  supabaseUrl !== "null" && 
+  !supabaseUrl.includes("your_supabase_url") &&
+  supabaseServiceKey !== "" &&
+  supabaseServiceKey !== "undefined" &&
+  supabaseServiceKey !== "null";
 
 let supabaseClient: any = null;
 if (hasSupabase) {
@@ -1328,6 +1335,7 @@ app.use("/uploads", express.static(uploadsDir));
 // Connect Vite integration
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
