@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Save, X, ImagePlus, Loader2 } from "lucide-react";
+import { apiFetch as fetch } from "../../lib/apiInterceptor";
 import { Teacher } from "../../lib/types";
 
 interface TeacherFormProps {

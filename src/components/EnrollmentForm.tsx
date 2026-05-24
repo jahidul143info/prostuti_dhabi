@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { CreditCard, CheckCircle2, AlertCircle, Sparkles, Copy, Check } from "lucide-react";
+import { apiFetch as fetch } from "../lib/apiInterceptor";
 import { AdminConfig, Course } from "../lib/types";
 
 interface EnrollmentFormProps {

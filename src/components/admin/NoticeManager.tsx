@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Edit2, Check, X, Loader2, Megaphone, FileText } from "lucide-react";
+import { apiFetch as fetch } from "../../lib/apiInterceptor";
 import { Notice } from "../../lib/types";
 
 interface NoticeManagerProps {

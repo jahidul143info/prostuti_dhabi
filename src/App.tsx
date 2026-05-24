@@ -26,6 +26,9 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
+// Import our custom interceptor fetch directly to bypass restricted/locked window.fetch getters
+import { apiFetch as fetch } from "./lib/apiInterceptor";
+
 // Types
 import { Course, Teacher, Enrollment, AdminConfig, Notice } from "./lib/types";
 

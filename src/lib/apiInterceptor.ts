@@ -270,40 +270,53 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
 }
 
 // Setup the Global Fetch Interception hook
-export function initApiInterceptor() {
-  const originalFetch = window.fetch || globalThis.fetch;
-  if (!originalFetch) return;
+export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  let urlStr = "";
+  if (typeof input === "string") {
+    urlStr = input;
+  } else if (input instanceof URL) {
+    urlStr = input.toString();
+  } else {
+    urlStr = input?.url || "";
+  }
 
-  const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-    let urlStr = "";
-    if (typeof input === "string") {
-      urlStr = input;
-    } else if (input instanceof URL) {
-      urlStr = input.toString();
-    } else {
-      urlStr = input?.url || "";
-    }
-
-    // Only intercept local relative /api routes
-    if (urlStr.includes("/api/")) {
+  // Only intercept local relative /api routes
+  if (urlStr.includes("/api/")) {
+    // Check if we can execute normal fetch or we need to fall back immediately
+    // If the window/globalThis is not under original fetch, call handleSupabaseFallback
+    const originalFetch = (window as any).__originalFetch || window.fetch || globalThis.fetch;
+    if (originalFetch) {
       try {
         const response = await originalFetch(input, init);
-        
-        // 404 or returning HTML (Netlify SPA catch-all fallback) indicates backend is absent
         const contentType = response.headers.get("content-type") || "";
         if (response.status === 404 || contentType.includes("text/html")) {
           return await handleSupabaseFallback(urlStr, init);
         }
-        
         return response;
       } catch (networkError) {
-        // Backend offline / DNS issue / relative path fail -> invoke direct fallback securely
         console.warn(`[API Network Failed] Falling back directly to client-side Supabase for path: ${urlStr}`);
         return await handleSupabaseFallback(urlStr, init);
       }
+    } else {
+      return await handleSupabaseFallback(urlStr, init);
     }
-    
-    return originalFetch(input, init);
+  }
+
+  const originalFetch = (window as any).__originalFetch || window.fetch || globalThis.fetch;
+  return originalFetch(input, init);
+}
+
+export function initApiInterceptor() {
+  const originalFetch = window.fetch || globalThis.fetch;
+  if (!originalFetch) return;
+
+  // Stash original fetch
+  if (!(window as any).__originalFetch) {
+    (window as any).__originalFetch = originalFetch;
+  }
+
+  const interceptedFetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+    return apiFetch(input, init);
   };
 
   try {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Edit2, Check, X, Loader2, Tag } from "lucide-react";
+import { apiFetch as fetch } from "../../lib/apiInterceptor";
 
 interface Category {
   id: string;
