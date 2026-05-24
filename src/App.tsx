@@ -67,6 +67,7 @@ export default function App() {
   const [rememberAdmin, setRememberAdmin] = useState<boolean>(() => {
     return localStorage.getItem("prostuti_remember_admin") === "true";
   });
+  const [adminEmailInput, setAdminEmailInput] = useState<string>("");
   const [adminPasswordInput, setAdminPasswordInput] = useState<string>("");
   const [showAdminPassword, setShowAdminPassword] = useState<boolean>(false);
   const [loginError, setLoginError] = useState("");
@@ -206,7 +207,7 @@ export default function App() {
       const response = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: adminPasswordInput })
+        body: JSON.stringify({ email: adminEmailInput, password: adminPasswordInput })
       });
 
       let resData: any = {};
@@ -232,6 +233,7 @@ export default function App() {
         localStorage.removeItem("prostuti_remember_admin");
       }
       setAdminPasswordInput("");
+      setAdminEmailInput("");
 
       setCurrentView("admin-dashboard");
       setActiveAdminTab("overview");
@@ -618,7 +620,7 @@ export default function App() {
                   </div>
                   <h2 className="text-2xl font-black tracking-tight" id="login-title">ম্যানেজমেন্ট কনসোল</h2>
                   <p className="text-white/60 text-xs sm:text-sm">
-                    পাসওয়ার্ড প্রদান করে অ্যাডমিন প্যানেলে নিরাপদ প্রবেশ করুন।
+                    ইমেইল ও পাসওয়ার্ড প্রদান করে অ্যাডমিন প্যানেলে নিরাপদ প্রবেশ করুন।
                   </p>
                 </div>
 
@@ -629,6 +631,17 @@ export default function App() {
                       <span>{loginError}</span>
                     </div>
                   )}
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs sm:text-sm font-bold text-white/80">ইমেইল অ্যাড্রেস (সুপাবেস লগইন)</label>
+                    <input
+                      type="email"
+                      placeholder="admin@example.com"
+                      value={adminEmailInput}
+                      onChange={(e) => setAdminEmailInput(e.target.value)}
+                      className="w-full text-xs sm:text-sm px-4 py-3 bg-white/5 border border-white/10 rounded-xl outline-none focus:ring-2 focus:ring-secondary/30 focus:border-secondary text-white font-sans placeholder:text-white/30"
+                    />
+                  </div>
 
                   <div className="space-y-1.5">
                     <label className="block text-xs sm:text-sm font-bold text-white/80">পাসওয়ার্ড দিন</label>

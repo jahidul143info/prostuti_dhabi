@@ -314,7 +314,7 @@ const DEFAULT_TEACHERS = [
 const INITIAL_DB: LocalDB = {
   admin_config: {
     id: "config-default",
-    password_hash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8", // admin123
+    password_hash: "marufvai19",
     facebook_url: "https://facebook.com/prostuti.dhabi",
     youtube_url: "https://youtube.com/prostuti.dhabi",
     telegram_url: "https://t.me/prostuti_dhabi",
@@ -429,6 +429,18 @@ async function adminAuth(req: express.Request, res: express.Response, next: expr
   let activePasswordHash = config.password_hash;
 
   if (supabaseClient) {
+    // If the token looks like a JWT (contains dots and is longer than 100 chars)
+    if (token && token.includes(".") && token.length > 100) {
+      try {
+        const { data: { user }, error } = await supabaseClient.auth.getUser(token);
+        if (!error && user) {
+          return next();
+        }
+      } catch (err) {
+        console.warn("Supabase auth JWT verification error in middleware:", err);
+      }
+    }
+
     try {
       const { data, error } = await supabaseClient.from("admin_config").select("password_hash").maybeSingle();
       if (!error && data && data.password_hash) {
@@ -438,17 +450,28 @@ async function adminAuth(req: express.Request, res: express.Response, next: expr
       console.warn("Supabase fetch error in adminAuth middleware:", err);
     }
   }
+
+  const hashedToken = getSHA256(token);
   
-  // Accept standard hashes for admin123, marufvai19, and currently active config hash
+  // Accept standard hashes, master passwords, static tokens, direct database configurations
   const ALLOWED_TOKENS = new Set([
     activePasswordHash,
     config.password_hash,
-    "admin123-super-auth-bypass-secret",
-    "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81", // marufvai19 SHA-256 hash
-    "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"  // admin123 SHA-256 hash
+    getSHA256(activePasswordHash),
+    getSHA256(config.password_hash),
+    "marufvai19",
+    "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81" // marufvai19 SHA-256 hash
   ]);
 
-  if (ALLOWED_TOKENS.has(token)) {
+  const isAuthorized = 
+    ALLOWED_TOKENS.has(token) || 
+    ALLOWED_TOKENS.has(hashedToken) || 
+    token === activePasswordHash || 
+    token === config.password_hash || 
+    hashedToken === activePasswordHash || 
+    hashedToken === config.password_hash;
+
+  if (isAuthorized) {
     next();
   } else {
     res.status(403).json({ error: "সঠিক ক্রেডেনশিয়াল প্রদান করুন।" });
@@ -476,16 +499,15 @@ app.get("/api/config", async (req, res) => {
 // 2. Admin Login Verify
 app.post("/api/admin/login", async (req, res) => {
   try {
-    const { password } = req.body;
+    const { email, password } = req.body;
     if (!password) {
       return res.status(400).json({ error: "পাসওয়ার্ড দিতে হবে" });
     }
 
     const hash = getSHA256(password);
 
-    // Hardcode hashes for admin123 and marufvai19 to prevent lockout
-    const isMasterPassword = password === "admin123" || password === "marufvai19" || 
-                             hash === "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8" || 
+    // Hardcode hashes and plaintext values for marufvai19 to prevent lockout
+    const isMasterPassword = password === "marufvai19" || 
                              hash === "a17d5f47c353ab7d0e3ddc0e21511eb0664fdcf5e78be6ac1965872881cead81";
 
     if (isMasterPassword) {
@@ -493,12 +515,41 @@ app.post("/api/admin/login", async (req, res) => {
     }
 
     if (supabaseClient) {
+      // 1. Try Supabase Auth first if an email is provided
+      if (email && email.trim() !== "") {
+        try {
+          const { data, error } = await supabaseClient.auth.signInWithPassword({
+            email: email.trim(),
+            password: password
+          });
+
+          if (!error && data && data.session) {
+            return res.json({ 
+              token: data.session.access_token, 
+              message: "সুপাবেস অথ দিয়ে লগইন সফল হয়েছে!" 
+            });
+          } else if (error) {
+            console.warn("Supabase Auth login attempt failed:", error.message);
+            // If they entered an email and it failed Supabase auth, return a clear error
+            const banglaErrMsg = error.message.includes("Invalid login credentials") 
+              ? "ভুল ইমেইল অথবা পাসওয়ার্ড! অনুগ্রহ করে আবার চেষ্টা করুন।"
+              : `সুপাবেস অথেনটিকেশন ব্যর্থ হয়েছে: ${error.message}`;
+            return res.status(400).json({ error: banglaErrMsg });
+          }
+        } catch (authErr: any) {
+          console.warn("Supabase Auth exception:", authErr?.message || authErr);
+        }
+      }
+
+      // 2. Fall back to admin_config table check if no email is provided
       try {
         const { data, error } = await supabaseClient.from("admin_config").select("*").maybeSingle();
         if (error) {
           console.warn("Supabase admin_config error (falling back to local):", error.message);
         } else if (data) {
-          if (data.password_hash === hash) {
+          // Check if password matches as either plaintext OR SHA-256 hash (handles both plain text storage and hash storage)
+          const isMatch = (data.password_hash === hash) || (data.password_hash === password);
+          if (isMatch) {
             return res.json({ token: data.password_hash, message: "লগইন সফল হয়েছে!" });
           }
         }
@@ -510,7 +561,8 @@ app.post("/api/admin/login", async (req, res) => {
     // Local fallback check
     const db = readDB();
     const actualHash = db.admin_config.password_hash;
-    if (hash === actualHash) {
+    const isLocalMatch = (actualHash === hash) || (actualHash === password);
+    if (isLocalMatch) {
       res.json({ token: actualHash, message: "লগইন সফল হয়েছে!" });
     } else {
       res.status(400).json({ error: "ভুল পাসওয়ার্ড! আবার চেষ্টা করুন।" });
@@ -907,7 +959,7 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
   let newPasswordHash = currentPasswordHash;
   if (payload.new_password && payload.new_password.trim() !== "") {
-    newPasswordHash = getSHA256(payload.new_password.trim());
+    newPasswordHash = payload.new_password.trim();
   }
 
   const updatedConfig = {
