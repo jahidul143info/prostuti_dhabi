@@ -259,16 +259,6 @@ export default function EnrollmentForm({ course, config, onSuccess, onCancel }: 
               </button>
             </div>
 
-            {/* Reference Box centered */}
-            <div className="border border-dashed border-primary/20 rounded-xl bg-primary/[0.01] p-3 text-center max-w-xs mx-auto space-y-1">
-              <span className="text-[10px] text-gray-400 tracking-wider font-extrabold uppercase font-sans">
-                YOUR STUDENT ID (REFERENCE)
-              </span>
-              <span className="block text-primary text-sm font-black font-mono tracking-widest uppercase">
-                {referenceCode}
-              </span>
-            </div>
-
             {/* List instruction guidelines */}
             <div className="pt-3 border-t border-gray-200/60 text-xs sm:text-sm text-gray-700 space-y-2">
               <h5 className="font-extrabold text-gray-800 text-sm">How to Pay:</h5>
@@ -287,10 +277,6 @@ export default function EnrollmentForm({ course, config, onSuccess, onCancel }: 
                 </li>
                 <li>
                   Enter Amount: <span className="font-bold text-gray-900">৳{course.price.toLocaleString("en-BD")}</span>
-                </li>
-                <li>
-                  Enter Reference: <span className="font-bold text-primary">{referenceCode}</span>{" "}
-                  <span className="text-[#E2125D] font-bold text-xs">(Mandatory)</span>
                 </li>
                 <li>Enter PIN to confirm.</li>
               </ol>
