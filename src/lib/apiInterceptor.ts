@@ -315,7 +315,7 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
       try {
         const response = await originalFetch(input, init);
         const contentType = response.headers.get("content-type") || "";
-        if (response.status === 404 || contentType.includes("text/html")) {
+        if (response.status === 404 || response.status >= 500 || contentType.includes("text/html")) {
           return await handleSupabaseFallback(urlStr, init);
         }
         return response;
