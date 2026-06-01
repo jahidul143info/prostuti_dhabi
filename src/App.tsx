@@ -901,7 +901,7 @@ export default function App() {
                                     {foundTeachers.map(t => (
                                       <img
                                         key={t.id}
-                                        src={t.photo_url || ""}
+                                        src={t.photo_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200"}
                                         alt={t.name}
                                         title={t.name}
                                         className="w-7 h-7 rounded-full object-cover border border-white"
@@ -976,7 +976,7 @@ export default function App() {
                               className="bg-white border border-primary/5 p-5.5 rounded-2xl flex items-start space-x-4 shadow-xs"
                             >
                               <img
-                                src={teach.photo_url || ""}
+                                src={teach.photo_url || "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=200"}
                                 alt={teach.name}
                                 className="w-14 h-14 rounded-full object-cover border border-primary/10 flex-shrink-0"
                                 referrerPolicy="no-referrer"

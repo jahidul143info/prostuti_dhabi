@@ -62,7 +62,8 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
           body: JSON.stringify({
             name: file.name,
             type: file.type,
-            data: base64Data
+            data: base64Data,
+            preset: "course_covers"
           })
         });
 

@@ -46,7 +46,8 @@ export default function TeacherForm({ teacher, onSave, onCancel, adminToken }: T
           body: JSON.stringify({
             name: file.name,
             type: file.type,
-            data: base64Data
+            data: base64Data,
+            preset: "teacher_profiles"
           })
         });
 

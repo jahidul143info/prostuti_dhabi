@@ -1112,13 +1112,96 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
   res.json({ success: true, config: updatedConfig });
 });
 
-// 13. Raw Base64 Image Upload handler
-app.post("/api/admin/upload", adminAuth, (req, res) => {
-  const { name, type, data } = req.body;
+// 13. Raw Base64 Image Upload handler with Cloudinary support and local storage fallback
+app.post("/api/admin/upload", adminAuth, async (req, res) => {
+  const { name, type, data, preset } = req.body;
   if (!name || !data) {
     return res.status(400).json({ error: "সঠিক ইমেজ ফাইল ডেটা প্রয়োজন।" });
   }
 
+  // Detect Cloudinary config (with user's default cloud name fallback)
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME || "dli4xunsm";
+  const apiKey = process.env.CLOUDINARY_API_KEY;
+  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  
+  // Choose preset from request first (passed by forms), then env, then default to course_covers
+  const uploadPreset = preset || process.env.CLOUDINARY_UPLOAD_PRESET || "course_covers";
+
+  if (cloudName) {
+    try {
+      console.log(`Attempting Cloudinary upload to cloud: ${cloudName} using preset: ${uploadPreset}...`);
+      // For Cloudinary uploads, make sure the string is a standard Data URI
+      let fileData = data;
+      if (!fileData.startsWith("data:")) {
+        const mimeType = type || "image/jpeg";
+        fileData = `data:${mimeType};base64,${data}`;
+      }
+
+      // Prepare request payload for Cloudinary API
+      let bodyData: Record<string, any> = {};
+      const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+      if (apiKey && apiSecret) {
+        // Signed upload via REST API (Super secure for backend server uploads!)
+        const timestamp = Math.round(Date.now() / 1000);
+        const paramsToSign = { 
+          timestamp,
+          upload_preset: uploadPreset
+        };
+        
+        // Sort keys alphabetically and sign
+        const sortedKeys = Object.keys(paramsToSign).sort();
+        const signatureString = sortedKeys
+          .map(k => `${k}=${paramsToSign[k as keyof typeof paramsToSign]}`)
+          .join("&") + apiSecret;
+        
+        const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
+
+        bodyData = {
+          file: fileData,
+          api_key: apiKey,
+          timestamp,
+          signature,
+          upload_preset: uploadPreset
+        };
+      } else if (uploadPreset) {
+        // Unsigned preset upload route
+        bodyData = {
+          file: fileData,
+          upload_preset: uploadPreset
+        };
+      } else {
+        throw new Error("Cloudinary credentials misconfigured. Please define CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET or CLOUDINARY_UPLOAD_PRESET.");
+      }
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(bodyData)
+      });
+
+      if (response.ok) {
+        const resJson: any = await response.json();
+        const secureUrl = resJson.secure_url || resJson.url;
+        if (secureUrl) {
+          console.log("Cloudinary upload successful:", secureUrl);
+          return res.json({
+            success: true,
+            url: secureUrl
+          });
+        }
+      } else {
+        const errorText = await response.text();
+        console.warn("Cloudinary upload rejected, falling back to local file storage. Error:", errorText);
+      }
+    } catch (cloudinaryErr: any) {
+      console.warn("Cloudinary upload failed, falling back to local file storage. Error details:", cloudinaryErr.message || cloudinaryErr);
+    }
+  }
+
+  // Standard Local FS Fallback
   try {
     // Strip header prefix
     const base64Data = data.replace(/^data:image\/\w+;base64,/, "");
@@ -1135,7 +1218,7 @@ app.post("/api/admin/upload", adminAuth, (req, res) => {
       url: `/uploads/${uniqueFilename}`
     });
   } catch (err: any) {
-    console.error("Upload error", err);
+    console.error("Local upload error", err);
     res.status(500).json({ error: "ফাইল সেভ করতে ত্রুটি ঘটেছে।" });
   }
 });
