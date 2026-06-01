@@ -1137,13 +1137,14 @@ app.post("/api/admin/upload", adminAuth, async (req, res) => {
         fileData = `data:${mimeType};base64,${data}`;
       }
 
-      // Prepare request payload for Cloudinary API
-      let bodyData: Record<string, any> = {};
+      // Prepare request payload for Cloudinary API with FormData
       const endpoint = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+      const formData = new FormData();
+      formData.append("file", fileData);
 
       if (apiKey && apiSecret) {
         // Signed upload via REST API (Super secure for backend server uploads!)
-        const timestamp = Math.round(Date.now() / 1000);
+        const timestamp = Math.round(Date.now() / 1000).toString();
         const paramsToSign = { 
           timestamp,
           upload_preset: uploadPreset
@@ -1157,29 +1158,20 @@ app.post("/api/admin/upload", adminAuth, async (req, res) => {
         
         const signature = crypto.createHash("sha1").update(signatureString).digest("hex");
 
-        bodyData = {
-          file: fileData,
-          api_key: apiKey,
-          timestamp,
-          signature,
-          upload_preset: uploadPreset
-        };
+        formData.append("api_key", apiKey);
+        formData.append("timestamp", timestamp);
+        formData.append("signature", signature);
+        formData.append("upload_preset", uploadPreset);
       } else if (uploadPreset) {
         // Unsigned preset upload route
-        bodyData = {
-          file: fileData,
-          upload_preset: uploadPreset
-        };
+        formData.append("upload_preset", uploadPreset);
       } else {
         throw new Error("Cloudinary credentials misconfigured. Please define CLOUDINARY_API_KEY + CLOUDINARY_API_SECRET or CLOUDINARY_UPLOAD_PRESET.");
       }
 
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(bodyData)
+        body: formData
       });
 
       if (response.ok) {

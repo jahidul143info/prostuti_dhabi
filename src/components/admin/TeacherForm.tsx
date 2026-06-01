@@ -37,6 +37,40 @@ export default function TeacherForm({ teacher, onSave, onCancel, adminToken }: T
     reader.onload = async (event) => {
       try {
         const base64Data = event.target?.result as string;
+
+        // 1. Try Direct Cloudinary Upload from browser for speed and absolute reliability (Unsigned Preset)
+        try {
+          const cloudName = "dli4xunsm";
+          const preset = "teacher_profiles";
+          const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+          const formData = new FormData();
+          formData.append("file", file); // actual file object
+          formData.append("upload_preset", preset);
+
+          console.log("Attempting direct client-side upload to Cloudinary...");
+          const cloudRes = await fetch(cloudinaryUrl, {
+            method: "POST",
+            body: formData
+          });
+
+          if (cloudRes.ok) {
+            const cloudData = await cloudRes.json();
+            const url = cloudData.secure_url || cloudData.url;
+            if (url) {
+              console.log("Direct Cloudinary upload successful:", url);
+              setPhotoUrl(url);
+              setUploading(false);
+              return; // Quit early since we are fully successful!
+            }
+          } else {
+            console.warn("Direct Cloudinary upload failed with status:", cloudRes.status, "Trying backend fallback...");
+          }
+        } catch (cloudErr) {
+          console.warn("Direct Cloudinary upload failed with exception. Trying backend fallback...", cloudErr);
+        }
+
+        // 2. Fallback to server-side upload proxy
         const res = await fetch("/api/admin/upload", {
           method: "POST",
           headers: {
