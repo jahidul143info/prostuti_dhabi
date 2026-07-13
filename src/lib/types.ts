@@ -74,6 +74,7 @@ export interface AdminConfig {
   bkash_number?: string;
   nagad_number?: string;
   rocket_number?: string;
+  helpline_number?: string;
   created_at?: string;
 }
 

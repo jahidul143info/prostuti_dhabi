@@ -94,6 +94,7 @@ export default function App() {
   const [bkashNumInput, setBkashNumInput] = useState("");
   const [nagadNumInput, setNagadNumInput] = useState("");
   const [rocketNumInput, setRocketNumInput] = useState("");
+  const [helplineNumInput, setHelplineNumInput] = useState("");
   const [aboutTextInput, setAboutTextInput] = useState("");
   const [aboutMissionInput, setAboutMissionInput] = useState("");
   const [adminNewPasswordInput, setAdminNewPasswordInput] = useState("");
@@ -118,6 +119,7 @@ export default function App() {
         setBkashNumInput(configData.bkash_number || "");
         setNagadNumInput(configData.nagad_number || "");
         setRocketNumInput(configData.rocket_number || "");
+        setHelplineNumInput(configData.helpline_number || "");
         setAboutTextInput(configData.about_text || "");
         setAboutMissionInput(configData.about_mission || "");
       }
@@ -439,6 +441,7 @@ export default function App() {
           bkash_number: bkashNumInput,
           nagad_number: nagadNumInput,
           rocket_number: rocketNumInput,
+          helpline_number: helplineNumInput,
           about_text: aboutTextInput,
           about_mission: aboutMissionInput,
           new_password: adminNewPasswordInput
@@ -1126,6 +1129,17 @@ export default function App() {
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>
+                        {/* Main Helpline Number */}
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-bold text-dark mb-1.5">প্রধান হেল্পলাইন নম্বর (ফুটারে প্রদর্শিত হবে)</label>
+                          <input
+                            type="text"
+                            value={helplineNumInput}
+                            onChange={(e) => setHelplineNumInput(e.target.value)}
+                            placeholder="যেমন: +৮৮০ ১৭১২-৩৪৫৬৭৮"
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -1249,7 +1263,7 @@ export default function App() {
 
       {/* 3. Footer displays globally except when in wide screen full admin console */}
       {currentView !== "admin-dashboard" && (
-        <Footer setView={handleViewChange} />
+        <Footer setView={handleViewChange} config={config} />
       )}
 
       {/* Global Modal for All Notices */}

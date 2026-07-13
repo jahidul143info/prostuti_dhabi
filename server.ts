@@ -98,6 +98,7 @@ interface LocalDB {
     bkash_number: string;
     nagad_number: string;
     rocket_number?: string;
+    helpline_number?: string;
     created_at: string;
   };
   teachers: Array<{
@@ -348,6 +349,7 @@ const INITIAL_DB: LocalDB = {
     bkash_number: "01712345678",
     nagad_number: "01912345678",
     rocket_number: "01811223344",
+    helpline_number: "+৮৮০ ১৭১২-৩৪৫৬৭৮",
     created_at: new Date().toISOString()
   },
   teachers: DEFAULT_TEACHERS,
@@ -510,6 +512,12 @@ app.get("/api/config", async (req, res) => {
       if (!error && data) {
         // Obfuscate hash on public payload
         const safeData = { ...data, password_hash: undefined };
+        
+        // Merge with local db.json in case helpline_number was saved locally
+        const db = readDB();
+        if (db.admin_config && db.admin_config.helpline_number && !safeData.helpline_number) {
+          safeData.helpline_number = db.admin_config.helpline_number;
+        }
         return res.json(safeData);
       }
     } catch (_) {}
@@ -1068,6 +1076,7 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
     rocket_number: payload.rocket_number || db.admin_config.rocket_number || "",
     about_text: payload.about_text || db.admin_config.about_text,
     about_mission: payload.about_mission || db.admin_config.about_mission,
+    helpline_number: payload.helpline_number !== undefined ? payload.helpline_number : db.admin_config.helpline_number,
     password_hash: newPasswordHash
   };
 
@@ -1079,39 +1088,40 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         return res.status(400).json({ error: `Supabase থেকে ডেটা পড়তে ব্যর্থ: ${fetchErr.message}` });
       }
 
+      const updatePayload: any = {
+        facebook_url: updatedConfig.facebook_url,
+        youtube_url: updatedConfig.youtube_url,
+        telegram_url: updatedConfig.telegram_url,
+        whatsapp_number: updatedConfig.whatsapp_number,
+        bkash_number: updatedConfig.bkash_number,
+        nagad_number: updatedConfig.nagad_number,
+        rocket_number: updatedConfig.rocket_number,
+        about_text: updatedConfig.about_text,
+        about_mission: updatedConfig.about_mission,
+        password_hash: updatedConfig.password_hash,
+        helpline_number: updatedConfig.helpline_number
+      };
+
       if (!dbRow) {
-        const insertRecord = {
-          id: "config-default",
-          facebook_url: updatedConfig.facebook_url,
-          youtube_url: updatedConfig.youtube_url,
-          telegram_url: updatedConfig.telegram_url,
-          whatsapp_number: updatedConfig.whatsapp_number,
-          bkash_number: updatedConfig.bkash_number,
-          nagad_number: updatedConfig.nagad_number,
-          rocket_number: updatedConfig.rocket_number,
-          about_text: updatedConfig.about_text,
-          about_mission: updatedConfig.about_mission,
-          password_hash: updatedConfig.password_hash
-        };
-        const { error: insertErr } = await supabaseClient.from("admin_config").insert(insertRecord);
+        let { error: insertErr } = await supabaseClient.from("admin_config").insert(updatePayload);
+        if (insertErr && (insertErr.message.includes("helpline_number") || insertErr.code === "42703")) {
+          console.warn("Supabase insert with helpline_number failed, retrying without it...");
+          const { helpline_number, ...retryPayload } = updatePayload;
+          const { error: retryErr } = await supabaseClient.from("admin_config").insert(retryPayload);
+          insertErr = retryErr;
+        }
         if (insertErr) {
           console.error("Supabase insert error during settings save:", insertErr);
           return res.status(400).json({ error: `Supabase-এ নতুন কনফিগারেশন তৈরি করতে ব্যর্থ: ${insertErr.message}` });
         }
       } else {
-        const { error: updateErr } = await supabaseClient.from("admin_config").update({
-          facebook_url: updatedConfig.facebook_url,
-          youtube_url: updatedConfig.youtube_url,
-          telegram_url: updatedConfig.telegram_url,
-          whatsapp_number: updatedConfig.whatsapp_number,
-          bkash_number: updatedConfig.bkash_number,
-          nagad_number: updatedConfig.nagad_number,
-          rocket_number: updatedConfig.rocket_number,
-          about_text: updatedConfig.about_text,
-          about_mission: updatedConfig.about_mission,
-          password_hash: updatedConfig.password_hash
-        }).eq("id", dbRow.id);
-
+        let { error: updateErr } = await supabaseClient.from("admin_config").update(updatePayload).eq("id", dbRow.id);
+        if (updateErr && (updateErr.message.includes("helpline_number") || updateErr.code === "42703")) {
+          console.warn("Supabase update with helpline_number failed, retrying without it...");
+          const { helpline_number, ...retryPayload } = updatePayload;
+          const { error: retryErr } = await supabaseClient.from("admin_config").update(retryPayload).eq("id", dbRow.id);
+          updateErr = retryErr;
+        }
         if (updateErr) {
           console.error("Supabase update error during settings save:", updateErr);
           return res.status(400).json({ error: `Supabase আপডেট করতে ব্যর্থ: ${updateErr.message}` });

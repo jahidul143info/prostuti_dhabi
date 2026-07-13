@@ -1,16 +1,19 @@
 import React from "react";
 import { GraduationCap, ArrowUp, Lock } from "lucide-react";
+import { AdminConfig } from "../lib/types";
 
 interface FooterProps {
   setView: (view: string) => void;
+  config?: Partial<AdminConfig> | null;
 }
 
-export default function Footer({ setView }: FooterProps) {
+export default function Footer({ setView, config }: FooterProps) {
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const currentYear = new Date().getFullYear();
+  const helpline = config?.helpline_number || "+৮৮০ ১৭১২-৩৪৫৬৭৮";
 
   return (
     <footer id="main-footer" className="bg-dark text-white pt-16 pb-8 border-t border-white/5 relative">
@@ -72,7 +75,7 @@ export default function Footer({ setView }: FooterProps) {
               শনি থেকে বৃহস্পতিবার: সকাল ১০টা — রাত ১০টা
             </p>
             <p className="text-secondary text-base font-extrabold font-sans">
-              +৮৮০ ১৭১২-৩৪৫৬৭৮
+              {helpline}
             </p>
           </div>
         </div>
