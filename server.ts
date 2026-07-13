@@ -11,6 +11,23 @@ dotenv.config();
 const app = express();
 const PORT = 3000;
 
+// Normalize req.url for Vercel deployment where the path can be rewritten
+app.use((req, res, next) => {
+  const isVercel = !!process.env.VERCEL;
+  if (isVercel) {
+    // If Vercel rewrote the path and stripped /api, or if req.url doesn't start with /api, normalize it
+    if (!req.url.startsWith("/api") && !req.url.startsWith("/uploads")) {
+      const apiPrefixes = ["/courses", "/teachers", "/categories", "/notices", "/enroll", "/admin", "/config"];
+      if (apiPrefixes.some(p => req.url.startsWith(p))) {
+        const originalUrl = req.url;
+        req.url = "/api" + req.url;
+        console.log(`[Vercel URL Normalized] Rewrote ${originalUrl} to ${req.url}`);
+      }
+    }
+  }
+  next();
+});
+
 // Set high limits for base64 file uploads
 app.use(express.json({ limit: "15mb" }));
 app.use(express.urlencoded({ extended: true, limit: "15mb" }));
