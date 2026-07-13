@@ -1036,7 +1036,7 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
 
   let newPasswordHash = currentPasswordHash;
   if (payload.new_password && payload.new_password.trim() !== "") {
-    newPasswordHash = payload.new_password.trim();
+    newPasswordHash = getSHA256(payload.new_password.trim());
   }
 
   const updatedConfig = {
