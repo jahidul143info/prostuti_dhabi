@@ -7,9 +7,10 @@ import {
   ChevronDown, 
   ChevronUp, 
   GraduationCap,
-  Sparkles
+  Sparkles,
+  PlayCircle
 } from "lucide-react";
-import { Course, Teacher, AdminConfig } from "../lib/types";
+import { Course, Teacher, AdminConfig, parseCurriculum } from "../lib/types";
 import EnrollmentForm from "./EnrollmentForm";
 
 interface CourseDetailViewProps {
@@ -22,6 +23,9 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
   const [activeTab, setActiveTab] = useState<"about" | "curriculum" | "teachers">("about");
   const [expandedWeek, setExpandedWeek] = useState<number | null>(0);
   const [showEnrollForm, setShowEnrollForm] = useState(false);
+  
+  const [selectedSubjectIdx, setSelectedSubjectIdx] = useState(0);
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
   const courseTeachers = course.teachers || [];
 
@@ -133,46 +137,128 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
 
               {/* Tab 2: CURRICULUM */}
               {activeTab === "curriculum" && (
-                <div className="space-y-3">
-                  {course.curriculum && course.curriculum.length > 0 ? (
-                    course.curriculum.map((week, idx) => {
-                      const isExpanded = expandedWeek === idx;
+                <div className="space-y-4">
+                  {(() => {
+                    const subjects = parseCurriculum(course.curriculum);
+                    if (subjects.length > 0) {
                       return (
-                        <div
-                          key={idx}
-                          className="bg-white border border-primary/10 rounded-2xl overflow-hidden transition-all duration-200"
-                        >
-                          <button
-                            onClick={() => toggleWeek(idx)}
-                            className="w-full flex items-center justify-between p-5 bg-neutral-50/50 hover:bg-neutral-50/10 text-left font-bold cursor-pointer font-sans"
-                          >
-                            <div className="flex items-center space-x-3 text-xs sm:text-sm">
-                              <span className="bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-lg border border-primary/10 font-bold">
-                                {week.week}
-                              </span>
-                              <span className="text-dark font-extrabold text-sm sm:text-base leading-tight">
-                                {week.topic}
-                              </span>
+                        <div className="space-y-6">
+                          {/* Subject selector tabs if there are multiple subjects */}
+                          {subjects.length > 1 && (
+                            <div className="flex flex-wrap gap-2 border-b border-gray-100 pb-3">
+                              {subjects.map((subj, sIdx) => (
+                                <button
+                                  key={subj.id || sIdx}
+                                  type="button"
+                                  onClick={() => setSelectedSubjectIdx(sIdx)}
+                                  className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                                    selectedSubjectIdx === sIdx
+                                      ? "bg-primary text-white shadow-sm"
+                                      : "bg-neutral-100 text-muted hover:bg-neutral-200"
+                                  }`}
+                                >
+                                  {subj.title}
+                                </button>
+                              ))}
                             </div>
-                            {isExpanded ? (
-                              <ChevronUp className="h-5 w-5 text-primary" />
-                            ) : (
-                              <ChevronDown className="h-5 w-5 text-gray-400" />
-                            )}
-                          </button>
-                          {isExpanded && (
-                            <div className="p-5.5 text-xs sm:text-sm text-gray-600 border-t border-primary/5 leading-relaxed bg-white">
-                              {week.details || "কোনো তথ্য সংযুক্ত করা হয়নি।"}
+                          )}
+
+                          {/* Display chapters and classes of the selected subject */}
+                          {subjects[selectedSubjectIdx] && (
+                            <div className="space-y-3">
+                              {subjects[selectedSubjectIdx].chapters && subjects[selectedSubjectIdx].chapters.length > 0 ? (
+                                subjects[selectedSubjectIdx].chapters.map((chapter, cIdx) => {
+                                  const chapterKey = `${selectedSubjectIdx}-${chapter.id || cIdx}`;
+                                  const isExpanded = expandedChapters[chapterKey] ?? (cIdx === 0); // Default expand the first chapter
+                                  
+                                  return (
+                                    <div
+                                      key={chapter.id || cIdx}
+                                      className="bg-white border border-primary/10 rounded-2xl overflow-hidden transition-all duration-200"
+                                    >
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setExpandedChapters({
+                                            ...expandedChapters,
+                                            [chapterKey]: !isExpanded
+                                          });
+                                        }}
+                                        className="w-full flex items-center justify-between p-5 bg-neutral-50/50 hover:bg-neutral-50/10 text-left font-bold cursor-pointer font-sans"
+                                      >
+                                        <div className="flex items-center space-x-3 text-xs sm:text-sm">
+                                          <span className="bg-primary/5 text-primary text-xs px-2.5 py-1 rounded-lg border border-primary/10 font-bold">
+                                            অধ্যায় {cIdx + 1}
+                                          </span>
+                                          <span className="text-dark font-extrabold text-sm sm:text-base leading-tight">
+                                            {chapter.title}
+                                          </span>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                          <span className="text-xs text-muted font-bold font-sans">
+                                            {chapter.classes?.length || 0} টি ক্লাস
+                                          </span>
+                                          {isExpanded ? (
+                                            <ChevronUp className="h-5 w-5 text-primary" />
+                                          ) : (
+                                            <ChevronDown className="h-5 w-5 text-gray-400" />
+                                          )}
+                                        </div>
+                                      </button>
+                                      
+                                      {isExpanded && (
+                                        <div className="border-t border-primary/5 bg-white divide-y divide-gray-50">
+                                          {chapter.classes && chapter.classes.length > 0 ? (
+                                            chapter.classes.map((cls, clIdx) => (
+                                              <div key={cls.id || clIdx} className="p-4 sm:px-6 flex items-center justify-between hover:bg-neutral-50/30 transition">
+                                                <div className="flex items-center space-x-3">
+                                                  <div className="h-7 w-7 rounded-full bg-secondary/10 flex items-center justify-center text-secondary text-xs font-bold flex-shrink-0">
+                                                    {clIdx + 1}
+                                                  </div>
+                                                  <div>
+                                                    <h5 className="text-xs sm:text-sm font-bold text-dark leading-snug">
+                                                      {cls.title}
+                                                    </h5>
+                                                    {cls.duration && (
+                                                      <span className="text-[10px] text-muted font-semibold mt-0.5 block">
+                                                        সময়কাল: {cls.duration}
+                                                      </span>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                                <div className="flex items-center space-x-2 text-primary/70 bg-primary/5 px-2.5 py-1 rounded-lg text-[10px] font-bold">
+                                                  <PlayCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                                                  <span>ক্লাস</span>
+                                                </div>
+                                              </div>
+                                            ))
+                                          ) : (
+                                            <div className="p-5 text-center text-xs text-muted">
+                                              এই অধ্যায়ে এখনও কোনো ক্লাস যোগ করা হয়নি।
+                                            </div>
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })
+                              ) : (
+                                <div className="text-center py-10 bg-neutral-50 text-muted text-xs rounded-2xl border border-dashed border-primary/15">
+                                  এই বিষয়ের অধীনে কোনো অধ্যায় খুঁজে পাওয়া যায়নি।
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
                       );
-                    })
-                  ) : (
-                    <div className="text-center py-10 bg-neutral-50 text-muted text-xs rounded-2xl border border-dashed border-primary/15">
-                      কারিকুলাম এখনো আপডেট করা হয়নি। খুব শীঘ্রই রিলিজ করা হবে!
-                    </div>
-                  )}
+                    } else {
+                      return (
+                        <div className="text-center py-10 bg-neutral-50 text-muted text-xs rounded-2xl border border-dashed border-primary/15">
+                          কারিকুলাম এখনো আপডেট করা হয়নি। খুব শীঘ্রই রিলিজ করা হবে!
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               )}
 

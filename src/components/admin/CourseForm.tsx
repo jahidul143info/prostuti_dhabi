@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Save, X, ImagePlus, Loader2 } from "lucide-react";
 import { apiFetch as fetch } from "../../lib/apiInterceptor";
-import { Course, Teacher, CurriculumWeek } from "../../lib/types";
+import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum } from "../../lib/types";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -22,7 +22,9 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
   const [totalClasses, setTotalClasses] = useState(course?.total_classes || 60);
   const [isPublished, setIsPublished] = useState(course?.is_published ?? false);
   const [selectedTeachers, setSelectedTeachers] = useState<string[]>(course?.teacher_ids || []);
-  const [curriculum, setCurriculum] = useState<CurriculumWeek[]>(course?.curriculum || []);
+  const [curriculum, setCurriculum] = useState<CurriculumSubject[]>(() => {
+    return parseCurriculum(course?.curriculum || []);
+  });
   
   const [coverUrl, setCoverUrl] = useState(course?.cover_photo_url || "");
   const [uploading, setUploading] = useState(false);
@@ -122,29 +124,118 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
     }
   };
 
-  // Add a new empty row to curriculum
-  const addCurriculumRow = () => {
-    const nextWeekNum = curriculum.length + 1;
-    const newRow: CurriculumWeek = {
-      week: `সপ্তাহ ${nextWeekNum}`,
-      topic: "",
-      details: ""
+  // Add a new empty Subject
+  const addSubject = () => {
+    const newSubject: CurriculumSubject = {
+      id: `subj-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+      title: "",
+      chapters: []
     };
-    setCurriculum([...curriculum, newRow]);
+    setCurriculum([...curriculum, newSubject]);
   };
 
-  // Remove a row from curriculum
-  const removeCurriculumRow = (index: number) => {
-    setCurriculum(curriculum.filter((_, i) => i !== index));
+  // Update Subject Title
+  const updateSubjectTitle = (subjId: string, title: string) => {
+    setCurriculum(curriculum.map(s => s.id === subjId ? { ...s, title } : s));
   };
 
-  const handleCurriculumChange = (index: number, field: keyof CurriculumWeek, value: string) => {
-    const updated = [...curriculum];
-    updated[index] = {
-      ...updated[index],
-      [field]: value
-    };
-    setCurriculum(updated);
+  // Remove Subject
+  const removeSubject = (subjId: string) => {
+    setCurriculum(curriculum.filter(s => s.id !== subjId));
+  };
+
+  // Add Chapter to Subject
+  const addChapter = (subjId: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      const newChapter: CurriculumChapter = {
+        id: `chap-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+        title: "",
+        classes: []
+      };
+      return {
+        ...s,
+        chapters: [...s.chapters, newChapter]
+      };
+    }));
+  };
+
+  // Update Chapter Title
+  const updateChapterTitle = (subjId: string, chapId: string, title: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      return {
+        ...s,
+        chapters: s.chapters.map(c => c.id === chapId ? { ...c, title } : c)
+      };
+    }));
+  };
+
+  // Remove Chapter from Subject
+  const removeChapter = (subjId: string, chapId: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      return {
+        ...s,
+        chapters: s.chapters.filter(c => c.id !== chapId)
+      };
+    }));
+  };
+
+  // Add Class to Chapter
+  const addClass = (subjId: string, chapId: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      return {
+        ...s,
+        chapters: s.chapters.map(c => {
+          if (c.id !== chapId) return c;
+          const newClass: CurriculumClass = {
+            id: `class-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,
+            title: "",
+            duration: ""
+          };
+          return {
+            ...c,
+            classes: [...c.classes, newClass]
+          };
+        })
+      };
+    }));
+  };
+
+  // Update Class field inside Chapter
+  const updateClassField = (subjId: string, chapId: string, classId: string, field: keyof CurriculumClass, value: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      return {
+        ...s,
+        chapters: s.chapters.map(c => {
+          if (c.id !== chapId) return c;
+          return {
+            ...c,
+            classes: c.classes.map(cl => cl.id === classId ? { ...cl, [field]: value } : cl)
+          };
+        })
+      };
+    }));
+  };
+
+  // Remove Class from Chapter
+  const removeClass = (subjId: string, chapId: string, classId: string) => {
+    setCurriculum(curriculum.map(s => {
+      if (s.id !== subjId) return s;
+      return {
+        ...s,
+        chapters: s.chapters.map(c => {
+          if (c.id !== chapId) return c;
+          return {
+            ...c,
+            classes: c.classes.filter(cl => cl.id !== classId)
+          };
+        })
+      };
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -389,74 +480,160 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
         </div>
 
         {/* Curriculum list section */}
-        <div className="md:col-span-2 space-y-3.5">
+        <div className="md:col-span-2 space-y-4">
           <div className="flex items-center justify-between border-b border-primary/5 pb-2">
             <label className="block text-xs sm:text-sm font-extrabold text-primary">
-              সাপ্তাহিক কারিকুলাম (Curriculum Schedule)
+              কোর্স কারিকুলাম (বিষয়, অধ্যায় ও ক্লাসসমূহ)
             </label>
             <button
               type="button"
-              onClick={addCurriculumRow}
-              className="flex items-center space-x-1 text-primary hover:text-secondary text-xs font-bold bg-accent/60 px-3 py-1.5 rounded-lg border border-primary/5 cursor-pointer"
+              onClick={addSubject}
+              className="flex items-center space-x-1 text-primary hover:text-secondary text-xs font-bold bg-accent/60 px-3 py-1.5 rounded-lg border border-primary/5 cursor-pointer animate-pulse"
             >
               <Plus className="h-3.5 w-3.5" />
-              <span>রো যোগ করুন</span>
+              <span>নতুন বিষয় (Subject) যোগ করুন</span>
             </button>
           </div>
 
-          <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+          <div className="space-y-6">
             {curriculum.length === 0 ? (
-              <div className="text-center py-6 text-muted text-xs bg-neutral-50 rounded-xl border border-dashed border-primary/15">
-                কোনো সাপ্তাহিক ট্র্যাপ এড করা নেই। রো যোগ করে শুরু করুন।
+              <div className="text-center py-8 text-muted text-xs bg-neutral-50 rounded-xl border border-dashed border-primary/15">
+                কোনো বিষয় এখনো যোগ করা হয়নি। "নতুন বিষয় যোগ করুন" বাটন চেপে শুরু করুন।
               </div>
             ) : (
-              curriculum.map((cur, index) => (
+              curriculum.map((subj, sIdx) => (
                 <div
-                  key={index}
-                  className="bg-neutral-50 p-4 rounded-xl border border-primary/5 flex flex-col sm:flex-row gap-3 items-start"
+                  key={subj.id || sIdx}
+                  className="bg-neutral-50/50 p-5 rounded-2xl border border-primary/10 space-y-4"
                 >
-                  <div className="flex-shrink-0 w-full sm:w-28">
-                    <span className="text-[10px] text-muted block mb-0.5 font-bold uppercase">সপ্তাহ</span>
-                    <input
-                      type="text"
-                      required
-                      value={cur.week}
-                      onChange={(e) => handleCurriculumChange(index, "week", e.target.value)}
-                      placeholder="যেমন: সপ্তাহ ১"
-                      className="w-full text-xs font-bold px-3 py-2 bg-white border border-primary/10 rounded-lg outline-none"
-                    />
+                  {/* Subject Row */}
+                  <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-primary/5 p-4 rounded-xl border border-primary/10">
+                    <div className="flex-grow w-full">
+                      <span className="text-[10px] text-primary font-bold uppercase block mb-1">বিষয় / সাবজেক্ট {sIdx + 1}</span>
+                      <input
+                        type="text"
+                        required
+                        value={subj.title}
+                        onChange={(e) => updateSubjectTitle(subj.id, e.target.value)}
+                        placeholder="যেমন: পদার্থবিজ্ঞান ১ম পত্র বা সাধারণ জ্ঞান"
+                        className="w-full text-xs font-bold px-3.5 py-2 bg-white border border-primary/10 rounded-lg outline-none focus:border-primary"
+                      />
+                    </div>
+                    <div className="flex items-center space-x-2 w-full sm:w-auto justify-end sm:mt-5">
+                      <button
+                        type="button"
+                        onClick={() => addChapter(subj.id)}
+                        className="flex items-center space-x-1 text-primary hover:text-secondary text-xs font-bold bg-white px-3 py-2 rounded-lg border border-primary/10 cursor-pointer"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>অধ্যায় যোগ করুন</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeSubject(subj.id)}
+                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 cursor-pointer"
+                        title="বিষয় মুছুন"
+                      >
+                        <Trash2 className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  <div className="flex-grow w-full">
-                    <span className="text-[10px] text-muted block mb-0.5 font-bold uppercase">টপিক/বিষয়</span>
-                    <input
-                      type="text"
-                      required
-                      value={cur.topic}
-                      onChange={(e) => handleCurriculumChange(index, "topic", e.target.value)}
-                      placeholder="যেমন: অন্তরীকরণ ও বলবিদ্যা বেসিকস"
-                      className="w-full text-xs px-3 py-2 bg-white border border-primary/10 rounded-lg outline-none"
-                    />
-                  </div>
+                  {/* Chapters Nested Area */}
+                  <div className="pl-4 sm:pl-8 border-l-2 border-primary/10 space-y-4">
+                    {subj.chapters && subj.chapters.length > 0 ? (
+                      subj.chapters.map((chapter, cIdx) => (
+                        <div
+                          key={chapter.id || cIdx}
+                          className="bg-white p-4 rounded-xl border border-primary/5 space-y-3"
+                        >
+                          {/* Chapter Header Row */}
+                          <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between bg-neutral-50/30 p-2.5 rounded-lg border border-primary/5">
+                            <div className="flex-grow w-full">
+                              <span className="text-[10px] text-muted font-bold uppercase block mb-1">অধ্যায় / চ্যাপ্টার {cIdx + 1}</span>
+                              <input
+                                type="text"
+                                required
+                                value={chapter.title}
+                                onChange={(e) => updateChapterTitle(subj.id, chapter.id, e.target.value)}
+                                placeholder="যেমন: অধ্যায় ১ - ভেক্টর বা পরিপাক ও শোষণ"
+                                className="w-full text-xs font-semibold px-3 py-2 bg-white border border-primary/10 rounded-lg outline-none focus:border-primary"
+                              />
+                            </div>
+                            <div className="flex items-center space-x-2 w-full sm:w-auto justify-end sm:mt-5">
+                              <button
+                                type="button"
+                                onClick={() => addClass(subj.id, chapter.id)}
+                                className="flex items-center space-x-1 text-secondary hover:text-primary text-xs font-bold bg-white px-3 py-2 rounded-lg border border-primary/10 cursor-pointer"
+                              >
+                                <Plus className="h-3.5 w-3.5" />
+                                <span>ক্লাস যোগ করুন</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeChapter(subj.id, chapter.id)}
+                                className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 cursor-pointer"
+                                title="অধ্যায় মুছুন"
+                              >
+                                <Trash2 className="h-4.5 w-4.5" />
+                              </button>
+                            </div>
+                          </div>
 
-                  <div className="flex-grow scroll-py-8 w-full">
-                    <span className="text-[10px] text-muted block mb-0.5 font-bold uppercase">বিস্তারিত আলোচনা</span>
-                    <input
-                      type="text"
-                      value={cur.details}
-                      onChange={(e) => handleCurriculumChange(index, "details", e.target.value)}
-                      placeholder="যেমন: লিমিট, অন্তরজের জ্যামিতিক তাৎপর্য ও বলবিদ্যার প্রশ্ন সমাধান"
-                      className="w-full text-xs px-3 py-2 bg-white border border-primary/10 rounded-lg outline-none"
-                    />
+                          {/* Classes Nested Area */}
+                          <div className="pl-4 sm:pl-6 border-l border-dashed border-primary/10 space-y-2">
+                            {chapter.classes && chapter.classes.length > 0 ? (
+                              chapter.classes.map((cls, clIdx) => (
+                                <div
+                                  key={cls.id || clIdx}
+                                  className="flex flex-col sm:flex-row gap-2.5 items-start sm:items-center bg-neutral-50/20 p-2.5 rounded-lg border border-neutral-100"
+                                >
+                                  <div className="flex-shrink-0 text-xs font-bold text-muted bg-neutral-100 h-6 w-6 rounded-full flex items-center justify-center">
+                                    {clIdx + 1}
+                                  </div>
+                                  <div className="flex-grow w-full">
+                                    <input
+                                      type="text"
+                                      required
+                                      value={cls.title}
+                                      onChange={(e) => updateClassField(subj.id, chapter.id, cls.id, "title", e.target.value)}
+                                      placeholder="ক্লাসের শিরোনাম (যেমন: লেকচার ১ - ভেক্টর পরিচিতি)"
+                                      className="w-full text-xs px-3 py-1.5 bg-white border border-primary/5 rounded-lg outline-none focus:border-primary"
+                                    />
+                                  </div>
+                                  <div className="w-full sm:w-36">
+                                    <input
+                                      type="text"
+                                      value={cls.duration || ""}
+                                      onChange={(e) => updateClassField(subj.id, chapter.id, cls.id, "duration", e.target.value)}
+                                      placeholder="সময়কাল (যেমন: ১ ঘ. ৩০ মি.)"
+                                      className="w-full text-xs px-3 py-1.5 bg-white border border-primary/5 rounded-lg outline-none focus:border-primary font-sans"
+                                    />
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => removeClass(subj.id, chapter.id, cls.id)}
+                                    className="text-red-500 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50 cursor-pointer self-end sm:self-center"
+                                    title="ক্লাস মুছুন"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="text-center py-3 text-muted text-[11px] bg-neutral-50/50 rounded-lg border border-dashed border-primary/10">
+                                অধ্যায়ে কোনো ক্লাস যোগ করা নেই। "ক্লাস যোগ করুন" বাটন চেপে ক্লাস সংযোগ করুন।
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-4 text-muted text-xs bg-white rounded-xl border border-dashed border-primary/10">
+                        বিষয়ে কোনো অধ্যায় যোগ করা নেই। "অধ্যায় যোগ করুন" বাটন চেপে অধ্যায় সংযোগ করুন।
+                      </div>
+                    )}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeCurriculumRow(index)}
-                    className="sm:self-end text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 cursor-pointer"
-                  >
-                    <Trash2 className="h-4.5 w-4.5" />
-                  </button>
                 </div>
               ))
             )}

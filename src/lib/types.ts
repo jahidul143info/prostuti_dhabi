@@ -4,6 +4,24 @@ export interface CurriculumWeek {
   details: string;
 }
 
+export interface CurriculumClass {
+  id: string;
+  title: string;
+  duration?: string;
+}
+
+export interface CurriculumChapter {
+  id: string;
+  title: string;
+  classes: CurriculumClass[];
+}
+
+export interface CurriculumSubject {
+  id: string;
+  title: string;
+  chapters: CurriculumChapter[];
+}
+
 export interface Teacher {
   id: string;
   name: string;
@@ -26,7 +44,7 @@ export interface Course {
   category: string;
   is_published: boolean;
   teacher_ids: string[];
-  curriculum: CurriculumWeek[];
+  curriculum: any[]; // Supports both old and new nested formats
   created_at?: string;
 }
 
@@ -65,4 +83,38 @@ export interface Notice {
   content: string;
   is_active: boolean;
   created_at?: string;
+}
+
+export function parseCurriculum(curriculum: any): CurriculumSubject[] {
+  if (!curriculum || !Array.isArray(curriculum)) return [];
+  
+  // If it's already in the new format (has chapters/subjects)
+  if (curriculum.length > 0 && ('chapters' in curriculum[0] || 'title' in curriculum[0] && Array.isArray((curriculum[0] as any).chapters))) {
+    return curriculum as CurriculumSubject[];
+  }
+
+  // If it's in the old format CurriculumWeek: { week: string; topic: string; details: string }
+  // We can convert it into a single subject named "কোর্স সিলেবাস" with chapters based on the weeks.
+  const legacySubject: CurriculumSubject = {
+    id: "legacy-subject",
+    title: "কোর্স সিলেবাস",
+    chapters: curriculum.map((item: any, idx: number) => {
+      const weekTitle = item.week || `সপ্তাহ ${idx + 1}`;
+      const topicTitle = item.topic || "টপিক";
+      const details = item.details || "";
+      
+      return {
+        id: `legacy-chapter-${idx}-${Date.now()}`,
+        title: `${weekTitle}: ${topicTitle}`,
+        classes: details ? [
+          {
+            id: `legacy-class-${idx}-${Date.now()}`,
+            title: details
+          }
+        ] : []
+      };
+    })
+  };
+
+  return [legacySubject];
 }
