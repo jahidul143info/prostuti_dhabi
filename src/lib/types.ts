@@ -119,3 +119,22 @@ export function parseCurriculum(curriculum: any): CurriculumSubject[] {
 
   return [legacySubject];
 }
+
+export interface SharedLink {
+  id: string;
+  title: string;
+  url: string;
+  category: string; // e.g., 'exam', 'notes', 'resources', 'other'
+  created_at?: string;
+}
+
+export interface StudentFeedback {
+  id: string;
+  student_name: string;
+  rating: number;
+  comment: string;
+  course_name?: string;
+  is_approved: boolean;
+  created_at?: string;
+}
+

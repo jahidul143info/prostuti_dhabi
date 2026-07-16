@@ -13,7 +13,17 @@ export default function Footer({ setView, config }: FooterProps) {
   };
 
   const currentYear = new Date().getFullYear();
-  const helpline = config?.helpline_number || "+৮৮০ ১৭১২-৩৪৫৬৭৮";
+  
+  // Convert Bengali digits to English digits
+  const convertBengaliToEnglish = (str: string): string => {
+    const banglaDigits = ["০", "১", "২", "৩", "৪", "৫", "৬", "৭", "৮", "৯"];
+    return str.replace(/[০-৯]/g, (digit) => {
+      const idx = banglaDigits.indexOf(digit);
+      return idx !== -1 ? idx.toString() : digit;
+    });
+  };
+
+  const helpline = convertBengaliToEnglish(config?.helpline_number || "+880 1712-345678");
 
   return (
     <footer id="main-footer" className="bg-dark text-white pt-16 pb-8 border-t border-white/5 relative">

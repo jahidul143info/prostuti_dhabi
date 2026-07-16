@@ -227,6 +227,85 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       }
     }
 
+    // 6.5 Shared Links GET/POST/PUT/DELETE fallback
+    if (path === "/api/shared-links" && method === "GET") {
+      try {
+        const { data, error } = await supabase.from("shared_links").select("*").order("created_at", { ascending: false });
+        if (!error && data) {
+          return makeJSONResponse(data);
+        }
+      } catch (_) {}
+      
+      // Fallback if table doesn't exist
+      const localLinksStr = localStorage.getItem("shared_links") || "[]";
+      return makeJSONResponse(JSON.parse(localLinksStr));
+    }
+
+    if (path.startsWith("/api/admin/shared-links")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "POST") {
+        const record = {
+          id: body.id || window.crypto.randomUUID?.() || Math.random().toString(36).substring(2, 9),
+          title: body.title,
+          url: body.url,
+          category: body.category || "other",
+          created_at: new Date().toISOString()
+        };
+        try {
+          const { error } = await supabase.from("shared_links").insert(record);
+          if (!error) {
+            return makeJSONResponse(record);
+          }
+        } catch (_) {}
+
+        // Fallback to localStorage
+        const localLinksStr = localStorage.getItem("shared_links") || "[]";
+        const localLinks = JSON.parse(localLinksStr);
+        localLinks.unshift(record);
+        localStorage.setItem("shared_links", JSON.stringify(localLinks));
+        return makeJSONResponse(record);
+      } else if (method === "PUT" && id && id !== "shared-links") {
+        const updatePayload = {
+          title: body.title,
+          url: body.url,
+          category: body.category || "other"
+        };
+        try {
+          const { error } = await supabase.from("shared_links").update(updatePayload).eq("id", id);
+          if (!error) {
+            return makeJSONResponse({ id, ...updatePayload });
+          }
+        } catch (_) {}
+
+        // Fallback to localStorage
+        const localLinksStr = localStorage.getItem("shared_links") || "[]";
+        const localLinks = JSON.parse(localLinksStr);
+        const idx = localLinks.findIndex((l: any) => l.id === id);
+        if (idx !== -1) {
+          localLinks[idx] = { ...localLinks[idx], ...updatePayload };
+          localStorage.setItem("shared_links", JSON.stringify(localLinks));
+          return makeJSONResponse(localLinks[idx]);
+        }
+        return makeJSONResponse({ id, ...updatePayload });
+      } else if (method === "DELETE" && id && id !== "shared-links") {
+        try {
+          const { error } = await supabase.from("shared_links").delete().eq("id", id);
+          if (!error) {
+            return makeJSONResponse({ success: true });
+          }
+        } catch (_) {}
+
+        // Fallback to localStorage
+        const localLinksStr = localStorage.getItem("shared_links") || "[]";
+        const localLinks = JSON.parse(localLinksStr);
+        const filtered = localLinks.filter((l: any) => l.id !== id);
+        localStorage.setItem("shared_links", JSON.stringify(filtered));
+        return makeJSONResponse({ success: true });
+      }
+    }
+
     // 7. Enrollments Management
     if (path === "/api/enroll" && method === "POST") {
       const { error } = await supabase.from("enrollments").insert(body);

@@ -55,12 +55,12 @@ export default function AboutSection({ config }: AboutSectionProps) {
               {config?.about_text || defaultAboutText}
             </p>
 
-            <div className="bg-white border border-primary/10 rounded-2xl p-6.5 shadow-sm">
-              <h3 className="text-primary font-bold text-lg mb-2 flex items-center space-x-2">
+            <div className="bg-white border border-primary/15 rounded-3xl p-7 shadow-[0_10px_30px_rgba(27,67,50,0.02)]">
+              <h3 className="text-primary font-bold text-xl mb-3 flex items-center space-x-2">
                 <span className="w-1.5 h-6 bg-secondary rounded-full" />
                 <span>আমাদের মূল মিশন</span>
               </h3>
-              <p className="text-gray-600 text-xs sm:text-sm leading-relaxed" id="about-mission-p">
+              <p className="text-gray-600 text-sm leading-relaxed" id="about-mission-p">
                 {config?.about_mission || defaultMissionText}
               </p>
             </div>
@@ -71,15 +71,15 @@ export default function AboutSection({ config }: AboutSectionProps) {
             {missionPoints.map((pt, i) => (
               <div
                 key={i}
-                className="bg-white hover:bg-white hover:border-primary border border-primary/5 p-6 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-lg hover:scale-103 group"
+                className="bg-white hover:border-primary/20 border border-primary/5 p-6 rounded-3xl shadow-sm transition-all duration-300 hover:shadow-[0_15px_30px_rgba(27,67,50,0.05)] hover:-translate-y-1 group"
               >
-                <div className="bg-primary/5 group-hover:bg-primary/10 w-12 h-12 rounded-xl flex items-center justify-center mb-4 transition-colors">
+                <div className="bg-primary/5 group-hover:bg-primary/10 w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-colors">
                   {pt.icon}
                 </div>
-                <h4 className="text-dark font-bold text-sm sm:text-base mb-1 inline-block">
+                <h4 className="text-dark font-extrabold text-sm sm:text-base mb-1.5 inline-block">
                   {pt.title}
                 </h4>
-                <p className="text-muted text-[11px] sm:text-xs leading-normal">
+                <p className="text-gray-500 text-xs leading-normal">
                   {pt.desc}
                 </p>
               </div>

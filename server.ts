@@ -101,6 +101,15 @@ interface LocalDB {
     helpline_number?: string;
     created_at: string;
   };
+  student_feedbacks?: Array<{
+    id: string;
+    student_name: string;
+    rating: number;
+    comment: string;
+    course_name?: string;
+    is_approved: boolean;
+    created_at: string;
+  }>;
   teachers: Array<{
     id: string;
     name: string;
@@ -147,6 +156,13 @@ interface LocalDB {
     title: string;
     content: string;
     is_active: boolean;
+    created_at: string;
+  }>;
+  shared_links?: Array<{
+    id: string;
+    title: string;
+    url: string;
+    category: string;
     created_at: string;
   }>;
 }
@@ -349,7 +365,7 @@ const INITIAL_DB: LocalDB = {
     bkash_number: "01712345678",
     nagad_number: "01912345678",
     rocket_number: "01811223344",
-    helpline_number: "+৮৮০ ১৭১২-৩৪৫৬৭৮",
+    helpline_number: "+880 1712-345678",
     created_at: new Date().toISOString()
   },
   teachers: DEFAULT_TEACHERS,
@@ -380,6 +396,58 @@ const INITIAL_DB: LocalDB = {
       content: "ঢাকা বিশ্ববিদ্যালয় স্বপ্নসারথিদের জন্য নতুন বি ইউনিটের মানবিক ও সি ইউনিটের ব্যবসায় ভর্তি প্রস্তুতি কার্যক্রম শুরু হয়েছে। সকল লাইভ ক্লাস এবং লেকচার শিট সংক্রান্ত তথ্যের জন্য ফেসবুক পেজে চোখ রাখুন ও ড্যাশবোর্ডে অ্যাক্সেস করুন। ভর্তি হতে নিচের কোর্সগুলো সরাসরি নির্বাচন করে পেমেন্ট সম্পূর্ণ করুন।",
       is_active: true,
       created_at: new Date().toISOString()
+    }
+  ],
+  shared_links: [
+    {
+      id: "link-exam-1",
+      title: "রসায়ন ১ম পত্র গুণগত রসায়ন কুইজ (পরীক্ষা লিংক)",
+      url: "https://docs.google.com/forms/d/e/1FAIpQLSfD_XbJzNfLp6_q8zR-example/viewform",
+      category: "exam",
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "link-notes-1",
+      title: "ঢাকা বিশ্ববিদ্যালয় বিগত ১০ বছরের পদার্থবিজ্ঞান প্রশ্নব্যাংক ও সমাধান (PDF)",
+      url: "https://drive.google.com/file/d/1example-physics-pdf/view",
+      category: "notes",
+      created_at: new Date().toISOString()
+    },
+    {
+      id: "link-resources-1",
+      title: "ইংরেজি রাইটিং পার্ট স্পেশাল সাজেশন শিট ২০২৫",
+      url: "https://drive.google.com/file/d/1example-english-sheet/view",
+      category: "resources",
+      created_at: new Date().toISOString()
+    }
+  ],
+  student_feedbacks: [
+    {
+      id: "fb-1",
+      student_name: "অমিত হাসান",
+      rating: 5,
+      comment: "ভাইয়াদের ক্লাসগুলো আসলেই অসাধারণ। বিশেষ করে ফিজিক্স আর কেমিস্ট্রির কঠিন কঠিন টপিকগুলো অনেক সহজ করে বুঝিয়েছেন। ঢাকা বিশ্ববিদ্যালয় 'ক' ইউনিটে চান্স পাওয়ার পেছনে এই প্ল্যাটফর্মটির অবদান অনেক বেশি।",
+      course_name: "ঢাবি 'ক' ইউনিট সম্পূর্ণ ভর্তি প্রস্তুতি ২০২৫",
+      is_approved: true,
+      created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "fb-2",
+      student_name: "তানজিলা আক্তার",
+      rating: 5,
+      comment: "আমার কাছে সবচেয়ে ভালো লেগেছে এদের ওএমআর ভিত্তিক মডেল টেস্টগুলো। পুরো ঢাবির ভর্তি পরীক্ষার হলের মতো আমেজ পাওয়া যায়। প্রতিটি টেস্টের পর চমৎকার সলভ ক্লাস পাওয়া যায় যা খুব কাজের।",
+      course_name: "ভর্তি পরীক্ষা ওএমআর ভিত্তিক চূড়ান্ত মডেল টেস্ট সিরিজ",
+      is_approved: true,
+      created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+    },
+    {
+      id: "fb-3",
+      student_name: "মো. সাজ্জাদুল ইসলাম",
+      rating: 5,
+      comment: "ঢাবি বি ইউনিটের ইংরেজির প্রস্তুতি নিয়ে অনেক চিন্তিত ছিলাম। ফারহানা আপুর ক্লাসগুলো করার পর নিজের আত্মবিশ্বাস বহুগুণ বেড়ে গেছে। আলহামদুলিল্লাহ্‌ আমি এখন ঢাবির বি ইউনিটের একজন শিক্ষার্থী!",
+      course_name: "আইবিএ ও ঢাবি বি-ইউনিট প্রিমিয়াম ইংলিশ ব্যাচ",
+      is_approved: true,
+      created_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
     }
   ]
 };
@@ -424,6 +492,14 @@ function readDB(): LocalDB {
 
   if (!db.admin_config) {
     db.admin_config = INITIAL_DB.admin_config;
+  }
+
+  if (!db.shared_links) {
+    db.shared_links = INITIAL_DB.shared_links || [];
+  }
+
+  if (!db.student_feedbacks) {
+    db.student_feedbacks = INITIAL_DB.student_feedbacks || [];
   }
 
   cachedDB = db;
@@ -1500,6 +1576,237 @@ app.delete("/api/admin/notices/:id", adminAuth, async (req, res) => {
   writeDB(db);
   res.json({ success: true, message: "নোটিশ মুছে ফেলা হয়েছে।" });
 });
+
+// 23. GET Shared Links (Public/Admin)
+app.get("/api/shared-links", async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient.from("shared_links").select("*").order("created_at", { ascending: false });
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  const links = db.shared_links || [];
+  const sortedLinks = [...links].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  res.json(sortedLinks);
+});
+
+// 24. Create Shared Link (Admin only)
+app.post("/api/admin/shared-links", adminAuth, async (req, res) => {
+  const { title, url, category } = req.body;
+  if (!title || !url) {
+    return res.status(400).json({ error: "শিরোনাম এবং লিংক দিন।" });
+  }
+
+  const record = {
+    id: crypto.randomUUID(),
+    title: title.trim(),
+    url: url.trim(),
+    category: category || "other",
+    created_at: new Date().toISOString()
+  };
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("shared_links").insert(record);
+      if (!error) {
+        return res.json(record);
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.shared_links) db.shared_links = [];
+  db.shared_links.push(record);
+  writeDB(db);
+  res.json(record);
+});
+
+// 25. Update Shared Link (Admin only)
+app.put("/api/admin/shared-links/:id", adminAuth, async (req, res) => {
+  const lid = req.params.id;
+  const { title, url, category } = req.body;
+
+  if (!title || !url) {
+    return res.status(400).json({ error: "শিরোনাম এবং লিংক দিন।" });
+  }
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("shared_links").update({
+        title: title.trim(),
+        url: url.trim(),
+        category: category || "other"
+      }).eq("id", lid);
+      if (!error) {
+        return res.json({ id: lid, title, url, category });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.shared_links) db.shared_links = [];
+  const idx = db.shared_links.findIndex(l => l.id === lid);
+  if (idx !== -1) {
+    db.shared_links[idx] = {
+      ...db.shared_links[idx],
+      title: title.trim(),
+      url: url.trim(),
+      category: category || "other"
+    };
+    writeDB(db);
+    return res.json(db.shared_links[idx]);
+  }
+  res.status(404).json({ error: "লিংক খুঁজে পাওয়া যায়নি।" });
+});
+
+// 26. Delete Shared Link (Admin only)
+app.delete("/api/admin/shared-links/:id", adminAuth, async (req, res) => {
+  const lid = req.params.id;
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("shared_links").delete().eq("id", lid);
+      if (!error) {
+        return res.json({ success: true, message: "লিংকটি মুছে ফেলা হয়েছে।" });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.shared_links) db.shared_links = [];
+  db.shared_links = db.shared_links.filter(l => l.id !== lid);
+  writeDB(db);
+  res.json({ success: true, message: "লিংকটি মুছে ফেলা হয়েছে।" });
+});
+
+
+// 27. GET Feedbacks (Public - approved only)
+app.get("/api/feedbacks", async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("student_feedbacks")
+        .select("*")
+        .eq("is_approved", true)
+        .order("created_at", { ascending: false });
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  const list = (db.student_feedbacks || []).filter(f => f.is_approved);
+  const sorted = [...list].sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+  res.json(sorted);
+});
+
+// 28. POST Submit Feedback (Public)
+app.post("/api/feedbacks", async (req, res) => {
+  const { student_name, rating, comment, course_name } = req.body;
+  if (!student_name || student_name.trim() === "") {
+    return res.status(400).json({ error: "অনুগ্রহ করে আপনার নাম লিখুন।" });
+  }
+  if (!rating || rating < 1 || rating > 5) {
+    return res.status(400).json({ error: "অনুগ্রহ করে ১ থেকে ৫ এর মধ্যে রেটিং দিন।" });
+  }
+  if (!comment || comment.trim() === "") {
+    return res.status(400).json({ error: "অনুগ্রহ করে আপনার মন্তব্য লিখুন।" });
+  }
+
+  const record = {
+    id: crypto.randomUUID(),
+    student_name: student_name.trim(),
+    rating: Number(rating),
+    comment: comment.trim(),
+    course_name: course_name ? course_name.trim() : "",
+    is_approved: true, // Default to true so student sees it immediately
+    created_at: new Date().toISOString()
+  };
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("student_feedbacks").insert(record);
+      if (!error) {
+        return res.json(record);
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.student_feedbacks) db.student_feedbacks = [];
+  db.student_feedbacks.push(record);
+  writeDB(db);
+  res.json(record);
+});
+
+// 29. GET All Feedbacks (Admin only)
+app.get("/api/admin/feedbacks", adminAuth, async (req, res) => {
+  if (supabaseClient) {
+    try {
+      const { data, error } = await supabaseClient
+        .from("student_feedbacks")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (!error && data) {
+        return res.json(data);
+      }
+    } catch (_) {}
+  }
+  const db = readDB();
+  res.json(db.student_feedbacks || []);
+});
+
+// 30. Toggle/Approve Feedback (Admin only)
+app.put("/api/admin/feedbacks/:id", adminAuth, async (req, res) => {
+  const fid = req.params.id;
+  const { is_approved } = req.body;
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient
+        .from("student_feedbacks")
+        .update({ is_approved: !!is_approved })
+        .eq("id", fid);
+      if (!error) {
+        return res.json({ id: fid, is_approved: !!is_approved });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.student_feedbacks) db.student_feedbacks = [];
+  const idx = db.student_feedbacks.findIndex(f => f.id === fid);
+  if (idx !== -1) {
+    db.student_feedbacks[idx].is_approved = !!is_approved;
+    writeDB(db);
+    return res.json(db.student_feedbacks[idx]);
+  }
+  res.status(404).json({ error: "ফিডব্যাক খুঁজে পাওয়া যায়নি।" });
+});
+
+// 31. Delete Feedback (Admin only)
+app.delete("/api/admin/feedbacks/:id", adminAuth, async (req, res) => {
+  const fid = req.params.id;
+
+  if (supabaseClient) {
+    try {
+      const { error } = await supabaseClient.from("student_feedbacks").delete().eq("id", fid);
+      if (!error) {
+        return res.json({ success: true, message: "ফিডব্যাক মুছে ফেলা হয়েছে।" });
+      }
+    } catch (_) {}
+  }
+
+  const db = readDB();
+  if (!db.student_feedbacks) db.student_feedbacks = [];
+  db.student_feedbacks = db.student_feedbacks.filter(f => f.id !== fid);
+  writeDB(db);
+  res.json({ success: true, message: "ফিডব্যাক মুছে ফেলা হয়েছে।" });
+});
+
 
 // Ensure uploaded files are accessible publicly at /uploads/...
 app.use("/uploads", express.static(uploadsDir));

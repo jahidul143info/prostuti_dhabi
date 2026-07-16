@@ -30,7 +30,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { apiFetch as fetch } from "./lib/apiInterceptor";
 
 // Types
-import { Course, Teacher, Enrollment, AdminConfig, Notice } from "./lib/types";
+import { Course, Teacher, Enrollment, AdminConfig, Notice, SharedLink, StudentFeedback } from "./lib/types";
 
 // Client Core Components
 import Navbar from "./components/Navbar";
@@ -38,6 +38,8 @@ import HeroSection from "./components/HeroSection";
 import CourseGrid from "./components/CourseGrid";
 import AboutSection from "./components/AboutSection";
 import ConnectSection from "./components/ConnectSection";
+import ResourcesSection from "./components/ResourcesSection";
+import FeedbackSection from "./components/FeedbackSection";
 import Footer from "./components/Footer";
 import CourseDetailView from "./components/CourseDetailView";
 
@@ -48,6 +50,8 @@ import TeacherForm from "./components/admin/TeacherForm";
 import EnrollmentTable from "./components/admin/EnrollmentTable";
 import CategoryManager from "./components/admin/CategoryManager";
 import NoticeManager from "./components/admin/NoticeManager";
+import LinkManager from "./components/admin/LinkManager";
+import FeedbackManager from "./components/admin/FeedbackManager";
 
 export default function App() {
   // Views navigation router
@@ -60,6 +64,7 @@ export default function App() {
   const [notices, setNotices] = useState<Notice[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [sharedLinks, setSharedLinks] = useState<SharedLink[]>([]);
   const [config, setConfig] = useState<Partial<AdminConfig> | null>(null);
   const [fetching, setFetching] = useState(true);
 
@@ -151,6 +156,13 @@ export default function App() {
         const noticesData = await noticesRes.json();
         setNotices(Array.isArray(noticesData) ? noticesData : (noticesData?.notices || []));
       }
+
+      // 6. Active Shared Links
+      const linksRes = await fetch("/api/shared-links");
+      if (linksRes.ok) {
+        const linksData = await linksRes.json();
+        setSharedLinks(linksData);
+      }
     } catch (err) {
       console.error("Error loading application states", err);
     } finally {
@@ -190,6 +202,13 @@ export default function App() {
       if (resNotices.ok) {
         const noticesData = await resNotices.json();
         setNotices(Array.isArray(noticesData) ? noticesData : (noticesData?.notices || []));
+      }
+
+      // 4. Retrieve all shared links
+      const resLinks = await fetch("/api/shared-links");
+      if (resLinks.ok) {
+        const linksData = await resLinks.json();
+        setSharedLinks(linksData);
       }
     } catch (error) {
       console.error("Failed loading authorized records", error);
@@ -582,8 +601,14 @@ export default function App() {
               {/* Courses Catalogue Grid */}
               <CourseGrid courses={courses} categories={categories} onSelectCourse={(id) => handleViewChange("course-detail", id)} />
               
+              {/* Important resources link share zone */}
+              <ResourcesSection links={sharedLinks} />
+              
               {/* About US Background & Mission */}
               <AboutSection config={config} />
+              
+              {/* Students feedbacks section */}
+              <FeedbackSection courses={courses} />
               
               {/* Channels list */}
               <ConnectSection config={config} />
@@ -1053,6 +1078,21 @@ export default function App() {
                   />
                 )}
 
+                {/* TAB: SHARED LINKS MANAGER */}
+                {activeAdminTab === "shared-links" && (
+                  <LinkManager
+                    adminToken={adminToken}
+                    links={sharedLinks}
+                    onRefresh={async () => {
+                      const res = await fetch("/api/shared-links");
+                      if (res.ok) {
+                        const data = await res.json();
+                        setSharedLinks(data);
+                      }
+                    }}
+                  />
+                )}
+
                 {/* TAB 4: ENROLLMENTS RECORDS */}
                 {activeAdminTab === "enrollments" && (
                   <div className="bg-white rounded-2xl border border-primary/5 shadow-xs p-6">
@@ -1062,6 +1102,11 @@ export default function App() {
                       onUpdateStatus={handleUpdateEnrollmentStatus}
                     />
                   </div>
+                )}
+
+                {/* TAB: FEEDBACKS RECORDS */}
+                {activeAdminTab === "feedbacks" && (
+                  <FeedbackManager adminToken={adminToken} />
                 )}
 
                 {/* TAB 5: GLOBAL CONFIG SETTINGS */}
@@ -1136,7 +1181,7 @@ export default function App() {
                             type="text"
                             value={helplineNumInput}
                             onChange={(e) => setHelplineNumInput(e.target.value)}
-                            placeholder="যেমন: +৮৮০ ১৭১২-৩৪৫৬৭৮"
+                            placeholder="যেমন: +880 1712-345678"
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>
