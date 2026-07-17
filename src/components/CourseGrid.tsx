@@ -13,6 +13,8 @@ export default function CourseGrid({ courses, categories = [], onSelectCourse }:
   const [activeCategory, setActiveCategory] = useState("সকল");
   const [searchTerm, setSearchTerm] = useState("");
 
+  const [showAll, setShowAll] = useState(false);
+
   const filterCategories = useMemo(() => {
     const list = categories.length > 0 
       ? categories.map(c => c.name) 
@@ -30,6 +32,10 @@ export default function CourseGrid({ courses, categories = [], onSelectCourse }:
       return matchCat && matchSearch;
     });
   }, [courses, activeCategory, searchTerm]);
+
+  const displayedCourses = useMemo(() => {
+    return showAll ? filteredCourses : filteredCourses.slice(0, 3);
+  }, [showAll, filteredCourses]);
 
   return (
     <section id="courses" className="py-24 bg-white">
@@ -83,18 +89,41 @@ export default function CourseGrid({ courses, categories = [], onSelectCourse }:
 
         {/* Courses Listing Grid */}
         {filteredCourses.length > 0 ? (
-          <div
-            id="course-grid-catalog"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
-          >
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                onSelect={onSelectCourse}
-              />
-            ))}
-          </div>
+          <>
+            <div
+              id="course-grid-catalog"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+            >
+              {displayedCourses.map((course) => (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  onSelect={onSelectCourse}
+                />
+              ))}
+            </div>
+
+            {filteredCourses.length > 3 && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="px-7 py-3 rounded-2xl text-xs sm:text-sm font-black text-primary border border-primary/25 bg-white hover:bg-primary/5 hover:border-primary/45 hover:scale-102 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-[0_4px_16px_rgba(27,67,50,0.03)]"
+                >
+                  {showAll ? (
+                    <>
+                      <span>সংকুচিত করুন</span>
+                      <span>⬆️</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>সবগুলো কোর্স দেখুন ({filteredCourses.length}টি)</span>
+                      <span>⬇️</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-16 bg-accent/20 rounded-3xl max-w-xl mx-auto border border-primary/5">
             <SlidersHorizontal className="h-10 w-10 text-muted mx-auto mb-4" />

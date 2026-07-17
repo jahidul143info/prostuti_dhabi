@@ -11,6 +11,7 @@ export default function FeedbackSection({ courses }: FeedbackSectionProps) {
   const [feedbacks, setFeedbacks] = useState<StudentFeedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [showAll, setShowAll] = useState(false);
 
   // Form states
   const [studentName, setStudentName] = useState("");
@@ -329,64 +330,87 @@ export default function FeedbackSection({ courses }: FeedbackSectionProps) {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <AnimatePresence>
-              {feedbacks.map((fb) => (
-                <motion.div
-                  key={fb.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.4 }}
-                  className="bg-white border border-primary/5 p-7 rounded-3xl shadow-[0_10px_30px_rgba(27,67,50,0.02)] hover:shadow-[0_15px_35px_rgba(27,67,50,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group relative"
-                >
-                  {/* Quote decoration */}
-                  <div className="absolute top-6 right-6 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
-                    <Quote className="h-10 w-10 rotate-180" />
-                  </div>
-
-                  <div>
-                    {/* Stars */}
-                    <div className="flex items-center space-x-0.5 mb-4">
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star 
-                          key={s} 
-                          className={`h-4.5 w-4.5 ${s <= fb.rating ? "fill-secondary text-secondary" : "text-gray-100"}`} 
-                        />
-                      ))}
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <AnimatePresence>
+                {(showAll ? feedbacks : feedbacks.slice(0, 3)).map((fb) => (
+                  <motion.div
+                    key={fb.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.4 }}
+                    className="bg-white border border-primary/5 p-7 rounded-3xl shadow-[0_10px_30px_rgba(27,67,50,0.02)] hover:shadow-[0_15px_35px_rgba(27,67,50,0.06)] hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group relative"
+                  >
+                    {/* Quote decoration */}
+                    <div className="absolute top-6 right-6 text-primary/5 group-hover:text-primary/10 transition-colors pointer-events-none">
+                      <Quote className="h-10 w-10 rotate-180" />
                     </div>
 
-                    {/* Comment text */}
-                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-6 font-sans">
-                      "{fb.comment}"
-                    </p>
-                  </div>
-
-                  {/* Student details */}
-                  <div className="flex items-center space-x-3 border-t border-gray-50 pt-4">
-                    <div className="bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center font-bold text-primary font-sans">
-                      {fb.student_name.charAt(0)}
-                    </div>
                     <div>
-                      <h4 className="font-extrabold text-dark text-xs sm:text-sm">
-                        {fb.student_name}
-                      </h4>
-                      {fb.course_name ? (
-                        <span className="text-[10px] text-primary bg-primary/5 font-semibold px-2 py-0.5 rounded-md mt-1 inline-block max-w-[200px] truncate" title={fb.course_name}>
-                          {fb.course_name}
-                        </span>
-                      ) : (
-                        <span className="text-[10px] text-gray-400 mt-1 inline-block">
-                          যাচাইকৃত শিক্ষার্থী
-                        </span>
-                      )}
+                      {/* Stars */}
+                      <div className="flex items-center space-x-0.5 mb-4">
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star 
+                            key={s} 
+                            className={`h-4.5 w-4.5 ${s <= fb.rating ? "fill-secondary text-secondary" : "text-gray-100"}`} 
+                          />
+                        ))}
+                      </div>
+
+                      {/* Comment text */}
+                      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-6 font-sans">
+                        "{fb.comment}"
+                      </p>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+
+                    {/* Student details */}
+                    <div className="flex items-center space-x-3 border-t border-gray-50 pt-4">
+                      <div className="bg-primary/10 h-10 w-10 rounded-full flex items-center justify-center font-bold text-primary font-sans">
+                        {fb.student_name.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-dark text-xs sm:text-sm">
+                          {fb.student_name}
+                        </h4>
+                        {fb.course_name ? (
+                          <span className="text-[10px] text-primary bg-primary/5 font-semibold px-2 py-0.5 rounded-md mt-1 inline-block max-w-[200px] truncate" title={fb.course_name}>
+                            {fb.course_name}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-gray-400 mt-1 inline-block">
+                            যাচাইকৃত শিক্ষার্থী
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {feedbacks.length > 3 && (
+              <div className="flex justify-center mt-12">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="px-7 py-3 rounded-2xl text-xs sm:text-sm font-black text-primary border border-primary/25 bg-white hover:bg-primary/5 hover:border-primary/45 hover:scale-102 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-[0_4px_16px_rgba(27,67,50,0.03)]"
+                >
+                  {showAll ? (
+                    <>
+                      <span>সংকুচিত করুন</span>
+                      <span>⬆️</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>সবগুলো মতামত দেখুন ({feedbacks.length}টি)</span>
+                      <span>⬇️</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>

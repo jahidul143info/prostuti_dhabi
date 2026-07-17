@@ -24,50 +24,52 @@ export default function ResourcesSection({ links, loading = false }: ResourcesSe
       case "exam":
         return {
           text: "এক্সাম",
-          badgeBg: "bg-red-500/10 text-red-600 border-red-200/50",
-          cardBg: "bg-gradient-to-br from-red-50/50 to-white hover:from-red-50/80",
-          borderHover: "hover:border-red-300 hover:shadow-[0_12px_24px_rgba(239,68,68,0.06)]",
-          iconBg: "bg-red-500/10 text-red-600"
+          badgeBg: "bg-rose-50 text-rose-600 border-rose-100",
+          cardBg: "bg-white border-rose-100/60 hover:bg-rose-50/20",
+          borderHover: "hover:border-rose-300 hover:shadow-[0_8px_16px_rgba(244,63,94,0.03)]",
+          iconBg: "bg-rose-50 text-rose-600"
         };
       case "notes":
         return {
           text: "নোটস ও পিডিএফ",
-          badgeBg: "bg-blue-500/10 text-blue-600 border-blue-200/50",
-          cardBg: "bg-gradient-to-br from-blue-50/50 to-white hover:from-blue-50/80",
-          borderHover: "hover:border-blue-300 hover:shadow-[0_12px_24px_rgba(59,130,246,0.06)]",
-          iconBg: "bg-blue-500/10 text-blue-600"
+          badgeBg: "bg-sky-50 text-sky-600 border-sky-100",
+          cardBg: "bg-white border-sky-100/60 hover:bg-sky-50/20",
+          borderHover: "hover:border-sky-300 hover:shadow-[0_8px_16px_rgba(14,165,233,0.03)]",
+          iconBg: "bg-sky-50 text-sky-600"
         };
       case "resources":
         return {
           text: "সাজেশন ও শিট",
-          badgeBg: "bg-emerald-500/10 text-emerald-700 border-emerald-200/50",
-          cardBg: "bg-gradient-to-br from-emerald-50/50 to-white hover:from-emerald-50/80",
-          borderHover: "hover:border-emerald-300 hover:shadow-[0_12px_24px_rgba(16,185,129,0.06)]",
-          iconBg: "bg-emerald-500/10 text-emerald-700"
+          badgeBg: "bg-emerald-50 text-emerald-700 border-emerald-100",
+          cardBg: "bg-white border-emerald-100/60 hover:bg-emerald-50/20",
+          borderHover: "hover:border-emerald-300 hover:shadow-[0_8px_16px_rgba(16,185,129,0.03)]",
+          iconBg: "bg-emerald-50 text-emerald-700"
         };
       default:
         return {
           text: "অন্যান্য লিংক",
-          badgeBg: "bg-amber-500/10 text-amber-700 border-amber-200/50",
-          cardBg: "bg-gradient-to-br from-amber-50/40 to-white hover:from-amber-50/70",
-          borderHover: "hover:border-amber-300 hover:shadow-[0_12px_24px_rgba(245,158,11,0.06)]",
-          iconBg: "bg-amber-500/10 text-amber-700"
+          badgeBg: "bg-amber-50 text-amber-700 border-amber-100",
+          cardBg: "bg-white border-amber-100/60 hover:bg-amber-50/20",
+          borderHover: "hover:border-amber-300 hover:shadow-[0_8px_16px_rgba(245,158,11,0.03)]",
+          iconBg: "bg-amber-50 text-amber-700"
         };
     }
   };
 
-  const getIcon = (cat: string) => {
+  const getIcon = (cat: string, className = "h-4.5 w-4.5") => {
     switch (cat) {
       case "exam":
-        return <ClipboardCheck className="h-4.5 w-4.5" />;
+        return <ClipboardCheck className={className} />;
       case "notes":
-        return <FileText className="h-4.5 w-4.5" />;
+        return <FileText className={className} />;
       case "resources":
-        return <FolderOpen className="h-4.5 w-4.5" />;
+        return <FolderOpen className={className} />;
       default:
-        return <Link className="h-4.5 w-4.5" />;
+        return <Link className={className} />;
     }
   };
+
+  const [showAll, setShowAll] = useState(false);
 
   // Filter links
   const filteredLinks = links.filter((link) => {
@@ -75,6 +77,8 @@ export default function ResourcesSection({ links, loading = false }: ResourcesSe
     const matchesCategory = selectedCategory === "all" || link.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const displayedLinks = showAll ? filteredLinks : filteredLinks.slice(0, 3);
 
   return (
     <section id="important-resources" className="py-16 bg-gradient-to-b from-[#f4faf7] to-white border-b border-gray-100 font-sans relative overflow-hidden">
@@ -148,48 +152,115 @@ export default function ResourcesSection({ links, loading = false }: ResourcesSe
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 max-w-5xl mx-auto" id="shared-resources-grid">
-            {filteredLinks.map((link) => {
-              const style = getCategoryStyles(link.category);
-              return (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`group flex flex-col justify-between p-4.5 sm:p-5 ${style.cardBg} border border-primary/5 rounded-2xl ${style.borderHover} transition-all duration-300 relative overflow-hidden`}
-                >
-                  <div>
-                    {/* Header: Icon & Tag */}
-                    <div className="flex items-center justify-between mb-3.5">
-                      <div className={`p-2.5 rounded-xl ${style.iconBg} transition-transform group-hover:scale-105 duration-300`}>
-                        {getIcon(link.category)}
+          <>
+            {/* Mobile View: Super Compact List Rows */}
+            <div className="block sm:hidden space-y-2 max-w-xl mx-auto mb-4" id="shared-resources-mobile-list">
+              {displayedLinks.map((link) => {
+                const style = getCategoryStyles(link.category);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex items-center justify-between p-3 border rounded-xl ${style.cardBg} ${style.borderHover} transition-all duration-200 active:scale-98`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      {/* Compact Icon */}
+                      <div className={`p-2 rounded-lg shrink-0 ${style.iconBg} transition-transform group-hover:scale-105 duration-200`}>
+                        {getIcon(link.category, "h-4 w-4")}
                       </div>
-                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border tracking-wide uppercase ${style.badgeBg}`}>
-                        {style.text}
-                      </span>
+                      
+                      {/* Title & Info */}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                          <span className={`text-[8px] font-extrabold px-1.5 py-0.2 rounded-md border tracking-wider uppercase ${style.badgeBg}`}>
+                            {style.text}
+                          </span>
+                          <span className="text-[9px] text-gray-400 font-sans">
+                            {link.created_at ? new Date(link.created_at).toLocaleDateString("bn-BD") : "সম্প্রতি"}
+                          </span>
+                        </div>
+                        <h3 className="font-extrabold text-dark text-xs leading-snug line-clamp-1 group-hover:text-primary transition-colors">
+                          {link.title}
+                        </h3>
+                      </div>
                     </div>
 
-                    {/* Title */}
-                    <h3 className="font-extrabold text-dark text-xs sm:text-sm mb-3 group-hover:text-primary transition-colors leading-relaxed line-clamp-2">
-                      {link.title}
-                    </h3>
-                  </div>
+                    {/* Compact external button indicator */}
+                    <div className="ml-2 flex items-center justify-center h-7 w-7 rounded-lg bg-gray-50 border border-gray-100/80 shrink-0 group-hover:border-primary/20 group-hover:bg-primary/5 transition-all">
+                      <ExternalLink className="h-3 w-3 text-primary group-hover:scale-110 transition-transform" />
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
 
-                  {/* Footer Action */}
-                  <div className="mt-2 pt-3 border-t border-gray-100/60 flex items-center justify-between text-xs text-gray-400">
-                    <span className="text-[10px] font-sans font-medium">
-                      {link.created_at ? new Date(link.created_at).toLocaleDateString("bn-BD") : "সম্প্রতি"}
-                    </span>
-                    <span className="inline-flex items-center gap-1 font-black text-primary text-[11px] group-hover:underline">
-                      প্রবেশ করুন
-                      <ExternalLink className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                    </span>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
+            {/* Desktop/Tablet View: Elegant Card Grid */}
+            <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 max-w-5xl mx-auto mb-4" id="shared-resources-grid">
+              {displayedLinks.map((link) => {
+                const style = getCategoryStyles(link.category);
+                return (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`group flex flex-col justify-between p-5 border rounded-2xl ${style.cardBg} ${style.borderHover} transition-all duration-300 relative overflow-hidden`}
+                  >
+                    <div>
+                      {/* Header: Icon & Tag */}
+                      <div className="flex items-center justify-between mb-3.5">
+                        <div className={`p-2.5 rounded-xl ${style.iconBg} transition-transform group-hover:scale-105 duration-300`}>
+                          {getIcon(link.category)}
+                        </div>
+                        <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border tracking-wide uppercase ${style.badgeBg}`}>
+                          {style.text}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      <h3 className="font-extrabold text-dark text-xs sm:text-sm mb-3 group-hover:text-primary transition-colors leading-relaxed line-clamp-2">
+                        {link.title}
+                      </h3>
+                    </div>
+
+                    {/* Footer Action */}
+                    <div className="mt-2 pt-3 border-t border-gray-100/60 flex items-center justify-between text-xs text-gray-400">
+                      <span className="text-[10px] font-sans font-medium">
+                        {link.created_at ? new Date(link.created_at).toLocaleDateString("bn-BD") : "সম্প্রতি"}
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-black text-primary text-[11px] group-hover:underline">
+                        প্রবেশ করুন
+                        <ExternalLink className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                      </span>
+                    </div>
+                  </a>
+                );
+              })}
+            </div>
+
+            {filteredLinks.length > 3 && (
+              <div className="flex justify-center mt-8">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  className="px-6 py-2.5 rounded-2xl text-xs font-black text-primary border border-primary/25 bg-white hover:bg-primary/5 hover:border-primary/40 hover:scale-102 transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-[0_4px_12px_rgba(27,67,50,0.03)]"
+                >
+                  {showAll ? (
+                    <>
+                      <span>সংকুচিত করুন</span>
+                      <span>⬆️</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>সবগুলো রিসোর্স দেখুন ({filteredLinks.length}টি)</span>
+                      <span>⬇️</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+          </>
         )}
 
       </div>
