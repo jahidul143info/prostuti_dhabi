@@ -64,7 +64,7 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
         newPasswordHash = body.new_password.trim();
       }
 
-      const record = {
+      const record: any = {
         facebook_url: body.facebook_url !== undefined ? body.facebook_url : (dbRow?.facebook_url || ""),
         youtube_url: body.youtube_url !== undefined ? body.youtube_url : (dbRow?.youtube_url || ""),
         telegram_url: body.telegram_url !== undefined ? body.telegram_url : (dbRow?.telegram_url || ""),
@@ -74,6 +74,7 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
         rocket_number: body.rocket_number !== undefined ? body.rocket_number : (dbRow?.rocket_number || ""),
         about_text: body.about_text !== undefined ? body.about_text : (dbRow?.about_text || ""),
         about_mission: body.about_mission !== undefined ? body.about_mission : (dbRow?.about_mission || ""),
+        helpline_number: body.helpline_number !== undefined ? body.helpline_number : (dbRow?.helpline_number || ""),
         password_hash: newPasswordHash
       };
 
