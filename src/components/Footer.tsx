@@ -92,9 +92,20 @@ export default function Footer({ setView, config }: FooterProps) {
 
         {/* Lower footer copyright */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
-          <p id="copyright-label">
-            © {currentYear} প্রস্তুতি ঢাবি। সর্বস্বত্ব সংরক্ষিত।
-          </p>
+          <div className="flex flex-col items-center sm:items-start space-y-1">
+            <p id="copyright-label">
+              © {currentYear} প্রস্তুতি ঢাবি। সর্বস্বত্ব সংরক্ষিত।
+            </p>
+            <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-secondary/10 via-emerald-500/5 to-secondary/10 border border-secondary/20 shadow-[0_0_15px_rgba(242,180,46,0.08)] hover:shadow-[0_0_20px_rgba(242,180,46,0.18)] hover:border-secondary/40 transition-all duration-300 group">
+              <span className="flex h-2 w-2 relative shrink-0">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+              </span>
+              <p className="text-[11px] text-white/85 leading-relaxed font-sans text-center sm:text-left">
+                Developed & Technical Support: <span className="text-secondary font-black tracking-wide text-xs drop-shadow-[0_0_6px_rgba(242,180,46,0.4)]">MD JAHIDUL ISLAM</span> <span className="opacity-70 text-[10px]">(Department of Management Studies, 20th Batch, Jagannath University)</span>
+              </p>
+            </div>
+          </div>
 
           <div className="flex items-center space-x-5">
             {/* Scroll back to top */}
