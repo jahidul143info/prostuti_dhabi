@@ -1,13 +1,15 @@
 import React from "react";
 import { ArrowRight } from "lucide-react";
 import { motion } from "motion/react";
+import { AdminConfig } from "../lib/types";
 
 interface HeroSectionProps {
+  config: AdminConfig | null;
   onSeeCourses: () => void;
   onSeeAbout: () => void;
 }
 
-export default function HeroSection({ onSeeCourses, onSeeAbout }: HeroSectionProps) {
+export default function HeroSection({ config, onSeeCourses, onSeeAbout }: HeroSectionProps) {
   // Stagger parameters for layout reveal
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -108,7 +110,9 @@ export default function HeroSection({ onSeeCourses, onSeeAbout }: HeroSectionPro
             className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-12 mt-4 px-6 py-6 bg-white/[0.03] border border-white/5 rounded-3xl backdrop-blur-xl max-w-3xl w-full"
           >
             <div className="text-center">
-              <p className="text-secondary text-2xl sm:text-3xl font-black font-sans">৫,০০০+</p>
+              <p className="text-secondary text-2xl sm:text-3xl font-black font-sans">
+                {config?.success_student_count || "৫,০০০+"}
+              </p>
               <p className="text-white/60 text-xs mt-1">সফল শিক্ষার্থী ও ভর্তিযোদ্ধা</p>
             </div>
             <div className="text-center border-y sm:border-y-0 sm:border-x border-white/10 py-4 sm:py-0">

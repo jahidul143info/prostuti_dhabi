@@ -100,6 +100,7 @@ export default function App() {
   const [nagadNumInput, setNagadNumInput] = useState("");
   const [rocketNumInput, setRocketNumInput] = useState("");
   const [helplineNumInput, setHelplineNumInput] = useState("");
+  const [successStudentCountInput, setSuccessStudentCountInput] = useState("");
   const [aboutTextInput, setAboutTextInput] = useState("");
   const [aboutMissionInput, setAboutMissionInput] = useState("");
   const [adminNewPasswordInput, setAdminNewPasswordInput] = useState("");
@@ -125,6 +126,7 @@ export default function App() {
         setNagadNumInput(configData.nagad_number || "");
         setRocketNumInput(configData.rocket_number || "");
         setHelplineNumInput(configData.helpline_number || "");
+        setSuccessStudentCountInput(configData.success_student_count || "");
         setAboutTextInput(configData.about_text || "");
         setAboutMissionInput(configData.about_mission || "");
       }
@@ -461,6 +463,7 @@ export default function App() {
           nagad_number: nagadNumInput,
           rocket_number: rocketNumInput,
           helpline_number: helplineNumInput,
+          success_student_count: successStudentCountInput,
           about_text: aboutTextInput,
           about_mission: aboutMissionInput,
           new_password: adminNewPasswordInput
@@ -552,7 +555,7 @@ export default function App() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <HeroSection onSeeCourses={onSeeCourses} onSeeAbout={onSeeAbout} />
+              <HeroSection config={config} onSeeCourses={onSeeCourses} onSeeAbout={onSeeAbout} />
               
               {/* Notice Board Banner */}
               {notices.filter(n => n.is_active).length > 0 && (
@@ -1182,6 +1185,17 @@ export default function App() {
                             value={helplineNumInput}
                             onChange={(e) => setHelplineNumInput(e.target.value)}
                             placeholder="যেমন: +880 1712-345678"
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
+                        {/* Success Student Count */}
+                        <div className="sm:col-span-3">
+                          <label className="block text-xs font-bold text-dark mb-1.5">সফল শিক্ষার্থীর সংখ্যা (যেমন: ৫,০০০+)</label>
+                          <input
+                            type="text"
+                            value={successStudentCountInput}
+                            onChange={(e) => setSuccessStudentCountInput(e.target.value)}
+                            placeholder="যেমন: ৫,০০০+"
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>

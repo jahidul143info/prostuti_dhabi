@@ -75,6 +75,7 @@ export interface AdminConfig {
   nagad_number?: string;
   rocket_number?: string;
   helpline_number?: string;
+  success_student_count?: string;
   created_at?: string;
 }
 

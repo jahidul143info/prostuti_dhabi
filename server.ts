@@ -99,6 +99,7 @@ interface LocalDB {
     nagad_number: string;
     rocket_number?: string;
     helpline_number?: string;
+    success_student_count?: string;
     created_at: string;
   };
   student_feedbacks?: Array<{
@@ -366,6 +367,7 @@ const INITIAL_DB: LocalDB = {
     nagad_number: "01912345678",
     rocket_number: "01811223344",
     helpline_number: "+880 1712-345678",
+    success_student_count: "৫,০০০+",
     created_at: new Date().toISOString()
   },
   teachers: DEFAULT_TEACHERS,
@@ -1153,6 +1155,7 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
     about_text: payload.about_text || db.admin_config.about_text,
     about_mission: payload.about_mission || db.admin_config.about_mission,
     helpline_number: payload.helpline_number !== undefined ? payload.helpline_number : db.admin_config.helpline_number,
+    success_student_count: payload.success_student_count !== undefined ? payload.success_student_count : db.admin_config.success_student_count,
     password_hash: newPasswordHash
   };
 
@@ -1175,14 +1178,15 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         about_text: updatedConfig.about_text,
         about_mission: updatedConfig.about_mission,
         password_hash: updatedConfig.password_hash,
-        helpline_number: updatedConfig.helpline_number
+        helpline_number: updatedConfig.helpline_number,
+        success_student_count: updatedConfig.success_student_count
       };
 
       if (!dbRow) {
         let { error: insertErr } = await supabaseClient.from("admin_config").insert(updatePayload);
-        if (insertErr && (insertErr.message.includes("helpline_number") || insertErr.code === "42703")) {
-          console.warn("Supabase insert with helpline_number failed, retrying without it...");
-          const { helpline_number, ...retryPayload } = updatePayload;
+        if (insertErr && (insertErr.message.includes("helpline_number") || insertErr.message.includes("success_student_count") || insertErr.code === "42703")) {
+          console.warn("Supabase insert with optional columns failed, retrying with safer subset...");
+          const { helpline_number, success_student_count, ...retryPayload } = updatePayload;
           const { error: retryErr } = await supabaseClient.from("admin_config").insert(retryPayload);
           insertErr = retryErr;
         }
@@ -1192,9 +1196,9 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         }
       } else {
         let { error: updateErr } = await supabaseClient.from("admin_config").update(updatePayload).eq("id", dbRow.id);
-        if (updateErr && (updateErr.message.includes("helpline_number") || updateErr.code === "42703")) {
-          console.warn("Supabase update with helpline_number failed, retrying without it...");
-          const { helpline_number, ...retryPayload } = updatePayload;
+        if (updateErr && (updateErr.message.includes("helpline_number") || updateErr.message.includes("success_student_count") || updateErr.code === "42703")) {
+          console.warn("Supabase update with optional columns failed, retrying with safer subset...");
+          const { helpline_number, success_student_count, ...retryPayload } = updatePayload;
           const { error: retryErr } = await supabaseClient.from("admin_config").update(retryPayload).eq("id", dbRow.id);
           updateErr = retryErr;
         }
