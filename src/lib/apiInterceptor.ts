@@ -131,9 +131,13 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       const id = parts[parts.length - 1];
       
       if (method === "POST") {
-        const { data, error } = await supabase.from("courses").insert(body).select();
+        const record = {
+          id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+          ...body
+        };
+        const { data, error } = await supabase.from("courses").insert(record).select();
         if (error) throw error;
-        return makeJSONResponse(data?.[0] || body);
+        return makeJSONResponse(data?.[0] || record);
       } else if (method === "PUT" && id && id !== "courses") {
         const { error } = await supabase.from("courses").update(body).eq("id", id);
         if (error) throw error;
@@ -157,9 +161,13 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       const id = parts[parts.length - 1];
 
       if (method === "POST") {
-        const { error } = await supabase.from("teachers").insert(body);
+        const record = {
+          id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+          ...body
+        };
+        const { error } = await supabase.from("teachers").insert(record);
         if (error) throw error;
-        return makeJSONResponse({ success: true });
+        return makeJSONResponse({ success: true, record });
       } else if (method === "PUT" && id && id !== "teachers") {
         const { error } = await supabase.from("teachers").update(body).eq("id", id);
         if (error) throw error;
@@ -183,9 +191,13 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       const id = parts[parts.length - 1];
 
       if (method === "POST") {
-        const { error } = await supabase.from("categories").insert(body);
+        const record = {
+          id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+          ...body
+        };
+        const { error } = await supabase.from("categories").insert(record);
         if (error) throw error;
-        return makeJSONResponse({ success: true });
+        return makeJSONResponse({ success: true, record });
       } else if (method === "PUT" && id && id !== "categories") {
         const { error } = await supabase.from("categories").update(body).eq("id", id);
         if (error) throw error;
@@ -213,9 +225,13 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
         if (error) throw error;
         return makeJSONResponse(data || []);
       } else if (method === "POST") {
-        const { error } = await supabase.from("notices").insert(body);
+        const record = {
+          id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+          ...body
+        };
+        const { error } = await supabase.from("notices").insert(record);
         if (error) throw error;
-        return makeJSONResponse({ success: true });
+        return makeJSONResponse({ success: true, record });
       } else if (method === "PUT" && id && id !== "notices") {
         const { error } = await supabase.from("notices").update(body).eq("id", id);
         if (error) throw error;
@@ -308,7 +324,12 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
 
     // 7. Enrollments Management
     if (path === "/api/enroll" && method === "POST") {
-      const { error } = await supabase.from("enrollments").insert(body);
+      const record = {
+        id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+        ...body,
+        created_at: body.created_at || new Date().toISOString()
+      };
+      const { error } = await supabase.from("enrollments").insert(record);
       if (error) throw error;
       return makeJSONResponse({ success: true, message: "আবেদন সফলভাবে সাবমিট করা হয়েছে!" });
     }
@@ -324,6 +345,99 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
       } else if (method === "PUT" && id && id !== "enrollments") {
         const { error } = await supabase.from("enrollments").update(body).eq("id", id);
         if (error) throw error;
+        return makeJSONResponse({ success: true });
+      }
+    }
+
+    // 7.5 Student Feedbacks GET/POST/PUT/DELETE
+    if (path === "/api/feedbacks" && method === "GET") {
+      try {
+        const { data, error } = await supabase.from("student_feedbacks").select("*").eq("is_approved", true).order("created_at", { ascending: false });
+        if (!error && data) {
+          return makeJSONResponse(data);
+        }
+      } catch (_) {}
+      
+      // Fallback
+      const localFbStr = localStorage.getItem("student_feedbacks") || "[]";
+      const localFb = JSON.parse(localFbStr).filter((f: any) => f.is_approved);
+      return makeJSONResponse(localFb);
+    }
+
+    if (path === "/api/feedbacks" && method === "POST") {
+      const record = {
+        id: body.id || (typeof window !== "undefined" && window.crypto?.randomUUID?.()) || Math.random().toString(36).substring(2, 15),
+        student_name: body.student_name,
+        rating: Number(body.rating || 5),
+        comment: body.comment,
+        course_name: body.course_name || "",
+        is_approved: body.is_approved !== undefined ? body.is_approved : true,
+        created_at: new Date().toISOString()
+      };
+      try {
+        const { error } = await supabase.from("student_feedbacks").insert(record);
+        if (!error) {
+          return makeJSONResponse(record);
+        }
+      } catch (_) {}
+
+      // Fallback
+      const localFbStr = localStorage.getItem("student_feedbacks") || "[]";
+      const localFb = JSON.parse(localFbStr);
+      localFb.unshift(record);
+      localStorage.setItem("student_feedbacks", JSON.stringify(localFb));
+      return makeJSONResponse(record);
+    }
+
+    if (path.startsWith("/api/admin/feedbacks")) {
+      const parts = path.split("/");
+      const id = parts[parts.length - 1];
+
+      if (method === "GET") {
+        try {
+          const { data, error } = await supabase.from("student_feedbacks").select("*").order("created_at", { ascending: false });
+          if (!error && data) {
+            return makeJSONResponse(data);
+          }
+        } catch (_) {}
+
+        // Fallback
+        const localFbStr = localStorage.getItem("student_feedbacks") || "[]";
+        return makeJSONResponse(JSON.parse(localFbStr));
+      } else if (method === "PUT" && id && id !== "feedbacks") {
+        const updatePayload = {
+          is_approved: body.is_approved
+        };
+        try {
+          const { error } = await supabase.from("student_feedbacks").update(updatePayload).eq("id", id);
+          if (!error) {
+            return makeJSONResponse({ id, ...updatePayload });
+          }
+        } catch (_) {}
+
+        // Fallback
+        const localFbStr = localStorage.getItem("student_feedbacks") || "[]";
+        const localFb = JSON.parse(localFbStr);
+        const idx = localFb.findIndex((f: any) => f.id === id);
+        if (idx !== -1) {
+          localFb[idx] = { ...localFb[idx], ...updatePayload };
+          localStorage.setItem("student_feedbacks", JSON.stringify(localFb));
+          return makeJSONResponse(localFb[idx]);
+        }
+        return makeJSONResponse({ id, ...updatePayload });
+      } else if (method === "DELETE" && id && id !== "feedbacks") {
+        try {
+          const { error } = await supabase.from("student_feedbacks").delete().eq("id", id);
+          if (!error) {
+            return makeJSONResponse({ success: true });
+          }
+        } catch (_) {}
+
+        // Fallback
+        const localFbStr = localStorage.getItem("student_feedbacks") || "[]";
+        const localFb = JSON.parse(localFbStr);
+        const filtered = localFb.filter((f: any) => f.id !== id);
+        localStorage.setItem("student_feedbacks", JSON.stringify(filtered));
         return makeJSONResponse({ success: true });
       }
     }
