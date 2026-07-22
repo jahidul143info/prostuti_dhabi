@@ -1,5 +1,5 @@
 import React from "react";
-import { GraduationCap, ArrowUp, Lock } from "lucide-react";
+import { GraduationCap, ArrowUp, Lock, Mail } from "lucide-react";
 import { AdminConfig } from "../lib/types";
 
 interface FooterProps {
@@ -96,14 +96,25 @@ export default function Footer({ setView, config }: FooterProps) {
             <p id="copyright-label">
               © {currentYear} প্রস্তুতি ঢাবি। সর্বস্বত্ব সংরক্ষিত।
             </p>
-            <div className="mt-2 inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-secondary/10 via-emerald-500/5 to-secondary/10 border border-secondary/20 shadow-[0_0_15px_rgba(242,180,46,0.08)] hover:shadow-[0_0_20px_rgba(242,180,46,0.18)] hover:border-secondary/40 transition-all duration-300 group">
-              <span className="flex h-2 w-2 relative shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
-              </span>
-              <p className="text-[11px] text-white/85 leading-relaxed font-sans text-center sm:text-left">
-                Developed & Technical Support: <span className="text-secondary font-black tracking-wide text-xs drop-shadow-[0_0_6px_rgba(242,180,46,0.4)]">MD JAHIDUL ISLAM</span> <span className="opacity-70 text-[10px]">(Department of Management Studies, 20th Batch, Jagannath University)</span>
-              </p>
+            <div className="mt-2.5 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-secondary/15 via-white/[0.04] to-secondary/10 border border-secondary/25 shadow-[0_0_15px_rgba(242,180,46,0.12)] hover:shadow-[0_0_20px_rgba(242,180,46,0.22)] hover:border-secondary/45 transition-all duration-300">
+                <span className="flex h-2 w-2 relative shrink-0">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+                </span>
+                <p className="text-[11px] text-white/90 leading-relaxed font-sans text-center sm:text-left">
+                  Developed & Technical Support: <span className="text-secondary font-black tracking-wide text-xs drop-shadow-[0_0_8px_rgba(242,180,46,0.5)]">MD JAHIDUL ISLAM</span> <span className="text-white/60 text-[10px] font-normal">(Department of Management Studies, Jagannath University)</span>
+                </p>
+              </div>
+
+              <a
+                href="mailto:jahidul.jnu80@gmail.com"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 hover:bg-secondary/20 border border-white/10 hover:border-secondary/40 text-white/80 hover:text-secondary text-[11px] font-sans transition-all duration-300 shadow-sm group"
+                title="Contact MD JAHIDUL ISLAM via Email"
+              >
+                <Mail className="h-3.5 w-3.5 text-secondary group-hover:scale-110 transition-transform" />
+                <span className="font-semibold text-[11px] tracking-wide">jahidul.jnu80@gmail.com</span>
+              </a>
             </div>
           </div>
 
