@@ -27,6 +27,10 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
   });
   
   const [coverUrl, setCoverUrl] = useState(course?.cover_photo_url || "");
+  const [enrolledCount, setEnrolledCount] = useState(course?.enrolled_count || "");
+  const [timerEnabled, setTimerEnabled] = useState(course?.timer_enabled ?? false);
+  const [timerEndTime, setTimerEndTime] = useState(course?.timer_end_time || "");
+  const [timerLabel, setTimerLabel] = useState(course?.timer_label || "অফার শেষ হতে বাকি:");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -260,7 +264,11 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
         is_published: isPublished,
         teacher_ids: selectedTeachers,
         curriculum: curriculum,
-        cover_photo_url: coverUrl
+        cover_photo_url: coverUrl,
+        enrolled_count: enrolledCount.trim(),
+        timer_enabled: timerEnabled,
+        timer_end_time: timerEndTime,
+        timer_label: timerLabel.trim()
       });
     } catch (err: any) {
       setError(err.message || "কোর্স সংরক্ষণ করতে ব্যর্থ হয়েছে।");
@@ -365,6 +373,70 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
             placeholder="৬০"
             className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none font-sans"
           />
+        </div>
+
+        {/* Enrolled Students Count */}
+        <div>
+          <label className="block text-xs sm:text-sm font-bold text-dark mb-1.5">
+            এনরোল্ড শিক্ষার্থী সংখ্যা (যেমন: ১৫০+ বা 350)
+          </label>
+          <input
+            type="text"
+            value={enrolledCount}
+            onChange={(e) => setEnrolledCount(e.target.value)}
+            placeholder="যেমন: ১৫০+ বা 350 জন"
+            className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none font-sans"
+          />
+        </div>
+
+        {/* Course Countdown Timer Configuration */}
+        <div className="md:col-span-2 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-dark flex items-center gap-1.5">
+                <span>⏱️ কোর্স টাইমার / কাউন্টডাউন অপশন</span>
+                <span className="text-[10px] text-amber-700 font-semibold bg-amber-100 px-2 py-0.5 rounded-md">Optional</span>
+              </h4>
+              <p className="text-[11px] text-gray-500">অন করলে কোর্সের কার্ডে এবং ডিটেইল পেইজে লিমিটেড টাইম কাউন্টডাউন দেখাবে।</p>
+            </div>
+            <label className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={timerEnabled}
+                onChange={(e) => setTimerEnabled(e.target.checked)}
+                className="sr-only peer"
+              />
+              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+            </label>
+          </div>
+
+          {timerEnabled && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-amber-500/10">
+              <div>
+                <label className="block text-[11px] font-bold text-dark mb-1">
+                  টাইমার লেবেল / টাইটেল
+                </label>
+                <input
+                  type="text"
+                  value={timerLabel}
+                  onChange={(e) => setTimerLabel(e.target.value)}
+                  placeholder="যেমন: অফার শেষ হতে বাকি:"
+                  className="w-full text-xs px-3.5 py-2 border border-primary/10 rounded-xl focus:border-primary outline-none bg-white font-sans"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-bold text-dark mb-1">
+                  টাইমার শেষ হওয়ার তারিখ ও সময় (Target End Time)
+                </label>
+                <input
+                  type="datetime-local"
+                  value={timerEndTime}
+                  onChange={(e) => setTimerEndTime(e.target.value)}
+                  className="w-full text-xs px-3.5 py-2 border border-primary/10 rounded-xl focus:border-primary outline-none bg-white font-sans"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Short Description */}

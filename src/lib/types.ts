@@ -45,6 +45,10 @@ export interface Course {
   is_published: boolean;
   teacher_ids: string[];
   curriculum: any[]; // Supports both old and new nested formats
+  enrolled_count?: string;
+  timer_enabled?: boolean;
+  timer_end_time?: string;
+  timer_label?: string;
   created_at?: string;
 }
 

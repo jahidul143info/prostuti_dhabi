@@ -8,10 +8,12 @@ import {
   ChevronUp, 
   GraduationCap,
   Sparkles,
-  PlayCircle
+  PlayCircle,
+  Users
 } from "lucide-react";
 import { Course, Teacher, AdminConfig, parseCurriculum } from "../lib/types";
 import EnrollmentForm from "./EnrollmentForm";
+import CountdownTimer from "./CountdownTimer";
 
 interface CourseDetailViewProps {
   course: Course & { teachers?: Teacher[] };
@@ -68,12 +70,27 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
                 </div>
               )}
               {/* Overlay with category info */}
-              <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent flex items-end p-6 md:p-8">
+              <div className="absolute inset-0 bg-gradient-to-t from-dark/70 via-transparent to-transparent flex items-end justify-between p-6 md:p-8">
                 <span className="bg-secondary text-dark text-xs font-extrabold px-3.5 py-1.5 rounded-full border border-secondary shadow-md font-sans uppercase tracking-wider">
                   {course.category}
                 </span>
+                {course.enrolled_count && (
+                  <span className="bg-dark/80 backdrop-blur-md text-white text-xs font-bold px-3.5 py-1.5 rounded-full border border-white/10 shadow-md flex items-center gap-1.5 font-sans">
+                    <Users className="w-3.5 h-3.5 text-secondary" />
+                    <span>{course.enrolled_count} জন এনরোল্ড</span>
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* Optional Countdown Timer Banner */}
+            {course.timer_enabled && course.timer_end_time && (
+              <CountdownTimer
+                endTime={course.timer_end_time}
+                label={course.timer_label || "ভর্তির শেষ সময় বাকি:"}
+                variant="detail"
+              />
+            )}
 
             {/* Header info headings */}
             <div className="space-y-3.5">
@@ -348,6 +365,15 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
                   </div>
                   <p className="text-xs sm:text-sm font-bold text-dark">{course.total_classes ? `${course.total_classes}টি লাইভ ক্লাস` : "উন্মুক্ত"}</p>
                 </div>
+                {course.enrolled_count && (
+                  <div className="space-y-0.5 col-span-2 pt-2 border-t border-dashed border-gray-100">
+                    <div className="flex items-center space-x-1 text-primary font-bold">
+                      <Users className="h-4 w-4 text-primary" />
+                      <span className="text-[10px]">এনরোল্ড শিক্ষার্থী:</span>
+                      <span className="text-xs font-black text-dark">{course.enrolled_count}</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Main enroll action */}

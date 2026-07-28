@@ -825,12 +825,22 @@ app.post("/api/admin/courses", adminAuth, async (req, res) => {
     is_published: !!payload.is_published,
     teacher_ids: payload.teacher_ids || [],
     curriculum: payload.curriculum || [],
+    enrolled_count: payload.enrolled_count || "",
+    timer_enabled: !!payload.timer_enabled,
+    timer_end_time: payload.timer_end_time || "",
+    timer_label: payload.timer_label || "",
     created_at: new Date().toISOString()
   };
 
   if (supabaseClient) {
     try {
-      const { data, error } = await supabaseClient.from("courses").insert(record).select();
+      let { data, error } = await supabaseClient.from("courses").insert(record).select();
+      if (error && (error.message.includes("enrolled_count") || error.message.includes("timer_") || error.code === "42703")) {
+        const { enrolled_count, timer_enabled, timer_end_time, timer_label, ...fallbackRecord } = record;
+        const retry = await supabaseClient.from("courses").insert(fallbackRecord).select();
+        error = retry.error;
+        data = retry.data;
+      }
       if (!error) {
         return res.json(record);
       }
@@ -849,21 +859,33 @@ app.put("/api/admin/courses/:id", adminAuth, async (req, res) => {
   const cid = req.params.id;
   const payload = req.body;
 
+  const updateFields: any = {
+    title: payload.title,
+    short_description: payload.short_description,
+    full_description: payload.full_description,
+    cover_photo_url: payload.cover_photo_url,
+    price: Number(payload.price),
+    duration: payload.duration,
+    total_classes: Number(payload.total_classes),
+    category: payload.category,
+    is_published: !!payload.is_published,
+    teacher_ids: payload.teacher_ids,
+    curriculum: payload.curriculum,
+    enrolled_count: payload.enrolled_count,
+    timer_enabled: !!payload.timer_enabled,
+    timer_end_time: payload.timer_end_time,
+    timer_label: payload.timer_label
+  };
+
   if (supabaseClient) {
     try {
-      const { error } = await supabaseClient.from("courses").update({
-        title: payload.title,
-        short_description: payload.short_description,
-        full_description: payload.full_description,
-        cover_photo_url: payload.cover_photo_url,
-        price: Number(payload.price),
-        duration: payload.duration,
-        total_classes: Number(payload.total_classes),
-        category: payload.category,
-        is_published: !!payload.is_published,
-        teacher_ids: payload.teacher_ids,
-        curriculum: payload.curriculum
-      }).eq("id", cid);
+      let { error } = await supabaseClient.from("courses").update(updateFields).eq("id", cid);
+
+      if (error && (error.message.includes("enrolled_count") || error.message.includes("timer_") || error.code === "42703")) {
+        const { enrolled_count, timer_enabled, timer_end_time, timer_label, ...fallbackFields } = updateFields;
+        const retry = await supabaseClient.from("courses").update(fallbackFields).eq("id", cid);
+        error = retry.error;
+      }
 
       if (!error) {
         return res.json({ id: cid, status: "updated" });
@@ -876,17 +898,7 @@ app.put("/api/admin/courses/:id", adminAuth, async (req, res) => {
   if (idx !== -1) {
     db.courses[idx] = {
       ...db.courses[idx],
-      title: payload.title,
-      short_description: payload.short_description,
-      full_description: payload.full_description,
-      cover_photo_url: payload.cover_photo_url,
-      price: Number(payload.price),
-      duration: payload.duration,
-      total_classes: Number(payload.total_classes),
-      category: payload.category,
-      is_published: !!payload.is_published,
-      teacher_ids: payload.teacher_ids,
-      curriculum: payload.curriculum
+      ...updateFields
     };
     writeDB(db);
     res.json(db.courses[idx]);

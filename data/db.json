@@ -70,6 +70,10 @@
         "teacher-sajid",
         "teacher-anika"
       ],
+      "enrolled_count": "৪৫০+",
+      "timer_enabled": true,
+      "timer_end_time": "2026-08-15T23:59",
+      "timer_label": "ডিসকাউন্টে ভর্তির সময় বাকি:",
       "curriculum": [
         {
           "week": "সপ্তাহ ১",
@@ -104,6 +108,7 @@
         "teacher-anika",
         "teacher-sajid"
       ],
+      "enrolled_count": "৩২০+",
       "curriculum": [
         {
           "week": "সপ্তাহ ১",
