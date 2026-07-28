@@ -13,7 +13,7 @@ import {
   Share2,
   Check
 } from "lucide-react";
-import { Course, Teacher, AdminConfig, parseCurriculum } from "../lib/types";
+import { Course, Teacher, AdminConfig, parseCurriculum, createCourseSlug } from "../lib/types";
 import EnrollmentForm from "./EnrollmentForm";
 import CountdownTimer from "./CountdownTimer";
 
@@ -34,7 +34,8 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
   const [copiedLink, setCopiedLink] = useState(false);
 
   const handleCopyLink = () => {
-    const directUrl = `${window.location.origin}${window.location.pathname}?course=${course.id}`;
+    const slug = createCourseSlug(course);
+    const directUrl = `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(slug)}`;
     navigator.clipboard.writeText(directUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);

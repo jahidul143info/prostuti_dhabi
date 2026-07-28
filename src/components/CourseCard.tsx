@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { BookOpen, Calendar, ArrowUpRight, Users, Share2, Check } from "lucide-react";
-import { Course } from "../lib/types";
+import { Course, createCourseSlug } from "../lib/types";
 import CountdownTimer from "./CountdownTimer";
 
 interface CourseCardProps {
@@ -15,7 +15,8 @@ export default function CourseCard({ course, onSelect }: CourseCardProps) {
 
   const handleCopyDirectLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const url = `${window.location.origin}${window.location.pathname}?course=${course.id}`;
+    const slug = createCourseSlug(course);
+    const url = `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(slug)}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

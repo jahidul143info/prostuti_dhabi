@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Plus, Trash2, Save, X, ImagePlus, Loader2, Share2, Copy, Check } from "lucide-react";
 import { apiFetch as fetch } from "../../lib/apiInterceptor";
-import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum } from "../../lib/types";
+import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum, createCourseSlug } from "../../lib/types";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -14,6 +14,7 @@ interface CourseFormProps {
 
 export default function CourseForm({ course, teachers, categories = [], onSave, onCancel, adminToken }: CourseFormProps) {
   const [title, setTitle] = useState(course?.title || "");
+  const [slug, setSlug] = useState(course?.slug || "");
   const [category, setCategory] = useState(course?.category || (categories.length > 0 ? categories[0].name : "বিজ্ঞান"));
   const [shortDesc, setShortDesc] = useState(course?.short_description || "");
   const [fullDesc, setFullDesc] = useState(course?.full_description || "");
@@ -255,6 +256,7 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
     try {
       await onSave({
         title: title.trim(),
+        slug: slug.trim(),
         category,
         short_description: shortDesc.trim(),
         full_description: fullDesc.trim(),
@@ -278,7 +280,8 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
   };
 
   const [copiedLink, setCopiedLink] = useState(false);
-  const directCourseUrl = course?.id ? `${window.location.origin}${window.location.pathname}?course=${course.id}` : "";
+  const courseSlug = course ? createCourseSlug({ ...course, slug, title }) : createCourseSlug({ slug, title });
+  const directCourseUrl = courseSlug ? `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(courseSlug)}` : "";
 
   const handleCopyFormLink = () => {
     if (!directCourseUrl) return;
@@ -338,7 +341,7 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name Title */}
-        <div className="md:col-span-2">
+        <div>
           <label className="block text-xs sm:text-sm font-bold text-dark mb-1.5">
             কোর্সের নাম/শিরোনাম <span className="text-red-500">*</span>
           </label>
@@ -349,6 +352,20 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
             onChange={(e) => setTitle(e.target.value)}
             placeholder="যেমন: ঢাবি 'ক' ইউনিট সম্পূর্ণ ভর্তি প্রস্তুতি"
             className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none"
+          />
+        </div>
+
+        {/* Custom Slug Input */}
+        <div>
+          <label className="block text-xs sm:text-sm font-bold text-dark mb-1.5">
+            কাস্টম ইউআরএল স্লাগ / Slug (ঐচ্ছিক)
+          </label>
+          <input
+            type="text"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            placeholder="যেমন: du-a-unit-batch-2026 (খালি রাখলে স্বয়ংক্রিয়ভাবে তৈরি হবে)"
+            className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none font-mono text-gray-700"
           />
         </div>
 

@@ -32,7 +32,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { apiFetch as fetch } from "./lib/apiInterceptor";
 
 // Types
-import { Course, Teacher, Enrollment, AdminConfig, Notice, SharedLink, StudentFeedback } from "./lib/types";
+import { Course, Teacher, Enrollment, AdminConfig, Notice, SharedLink, StudentFeedback, createCourseSlug } from "./lib/types";
 
 // Client Core Components
 import Navbar from "./components/Navbar";
@@ -184,13 +184,32 @@ export default function App() {
     loadInitialData();
   }, []);
 
-  // Deep Linking: Auto-open course detail if ?course=course_id is in URL
+  // Helper to match course by ID, custom slug, or generated slug
+  const findCourseByParam = (coursesList: Course[], param: string) => {
+    if (!param) return null;
+    const decoded = decodeURIComponent(param).trim().toLowerCase();
+    
+    return coursesList.find((c) => {
+      const cId = (c.id || "").toLowerCase();
+      const cCustomSlug = (c.slug || "").trim().toLowerCase();
+      const cAutoSlug = createCourseSlug(c).toLowerCase();
+      
+      return (
+        cId === decoded ||
+        (cCustomSlug && cCustomSlug === decoded) ||
+        cAutoSlug === decoded ||
+        encodeURIComponent(cAutoSlug).toLowerCase() === decoded
+      );
+    }) || null;
+  };
+
+  // Deep Linking: Auto-open course detail if ?course=slug_or_id is in URL
   useEffect(() => {
     if (courses.length > 0) {
       const params = new URLSearchParams(window.location.search);
-      const courseIdParam = params.get("course") || params.get("course_id");
-      if (courseIdParam && currentView !== "admin-dashboard" && currentView !== "admin-login") {
-        const targetCourse = courses.find((c) => c.id === courseIdParam);
+      const courseParam = params.get("course") || params.get("course_id");
+      if (courseParam && currentView !== "admin-dashboard" && currentView !== "admin-login") {
+        const targetCourse = findCourseByParam(courses, courseParam);
         if (targetCourse) {
           setSelectedCourseId(targetCourse.id);
           setCurrentView("course-detail");
@@ -199,15 +218,16 @@ export default function App() {
     }
   }, [courses]);
 
-  // Dynamic SEO Document Title & URL synchronization
+  // Dynamic SEO Document Title & URL synchronization with clean course slugs
   useEffect(() => {
     if (currentView === "course-detail" && selectedCourseId) {
       const activeCourse = courses.find((c) => c.id === selectedCourseId);
       if (activeCourse) {
         document.title = `${activeCourse.title} | প্রস্তুতি ঢাবি`;
+        const slug = createCourseSlug(activeCourse);
         const params = new URLSearchParams(window.location.search);
-        if (params.get("course") !== selectedCourseId) {
-          params.set("course", selectedCourseId);
+        if (params.get("course") !== slug) {
+          params.set("course", slug);
           window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`);
         }
       }
@@ -232,16 +252,16 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
-      const courseIdParam = params.get("course") || params.get("course_id");
-      if (courseIdParam && courses.length > 0) {
-        const found = courses.find((c) => c.id === courseIdParam);
+      const courseParam = params.get("course") || params.get("course_id");
+      if (courseParam && courses.length > 0) {
+        const found = findCourseByParam(courses, courseParam);
         if (found) {
           setSelectedCourseId(found.id);
           setCurrentView("course-detail");
           return;
         }
       }
-      if (!courseIdParam && currentView === "course-detail") {
+      if (!courseParam && currentView === "course-detail") {
         setCurrentView("home");
         setSelectedCourseId(null);
       }
