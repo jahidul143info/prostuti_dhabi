@@ -34,7 +34,6 @@ export interface Teacher {
 
 export interface Course {
   id: string;
-  slug?: string;
   title: string;
   short_description: string;
   full_description: string;
@@ -51,28 +50,6 @@ export interface Course {
   timer_end_time?: string;
   timer_label?: string;
   created_at?: string;
-}
-
-export function createCourseSlug(course: Partial<Course>): string {
-  if (course.slug && course.slug.trim()) {
-    return course.slug
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^\w\u0980-\u09FF-]/g, '');
-  }
-  if (!course.title) return course.id || "course";
-
-  // Clean title: replace spaces with hyphen, strip quotes and punctuation
-  const clean = course.title
-    .trim()
-    .toLowerCase()
-    .replace(/['"’']/g, '')
-    .replace(/[^\w\u0980-\u09FF\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-');
-
-  return clean || course.id || "course";
 }
 
 export interface Enrollment {

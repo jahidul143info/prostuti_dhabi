@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { BookOpen, Calendar, ArrowUpRight, Users, Share2, Check } from "lucide-react";
-import { Course, createCourseSlug } from "../lib/types";
+import React from "react";
+import { BookOpen, Calendar, ArrowUpRight, Users } from "lucide-react";
+import { Course } from "../lib/types";
 import CountdownTimer from "./CountdownTimer";
 
 interface CourseCardProps {
@@ -11,16 +11,6 @@ interface CourseCardProps {
 
 export default function CourseCard({ course, onSelect }: CourseCardProps) {
   const isFree = course.price === 0;
-  const [copied, setCopied] = useState(false);
-
-  const handleCopyDirectLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const slug = createCourseSlug(course);
-    const url = `${window.location.origin}/course/${encodeURIComponent(slug)}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <div
@@ -102,31 +92,17 @@ export default function CourseCard({ course, onSelect }: CourseCardProps) {
             </span>
           </div>
 
-          <div className="flex items-center space-x-2">
-            <button
-              onClick={handleCopyDirectLink}
-              title={copied ? "কপি হয়েছে!" : "কোর্স ডাইরেক্ট লিংক কপি করুন"}
-              className={`p-2.5 rounded-xl border text-xs font-bold transition-all flex items-center justify-center cursor-pointer ${
-                copied 
-                  ? "bg-green-500/10 border-green-500/30 text-green-700" 
-                  : "border-primary/10 bg-primary/5 hover:bg-primary/15 text-primary"
-              }`}
-            >
-              {copied ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4 text-primary" />}
-            </button>
-
-            <button
-              id={`course-view-btn-${course.id}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelect(course.id);
-              }}
-              className="bg-accent text-primary border border-primary/5 hover:bg-primary hover:text-white px-3.5 py-2.5 rounded-xl text-[11px] font-extrabold flex items-center space-x-1 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-md cursor-pointer"
-            >
-              <span>বিস্তারিত</span>
-              <ArrowUpRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
+          <button
+            id={`course-view-btn-${course.id}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(course.id);
+            }}
+            className="bg-accent text-primary border border-primary/5 hover:bg-primary hover:text-white px-4 py-2.5 rounded-xl text-[11px] font-extrabold flex items-center space-x-1 transition-all duration-300 group-hover:bg-primary group-hover:text-white group-hover:shadow-md"
+          >
+            <span>বিস্তারিত</span>
+            <ArrowUpRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
     </div>

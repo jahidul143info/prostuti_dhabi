@@ -22,9 +22,7 @@ import {
   ExternalLink,
   Megaphone,
   Bell,
-  X,
-  Share2,
-  Check
+  X
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -32,7 +30,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { apiFetch as fetch } from "./lib/apiInterceptor";
 
 // Types
-import { Course, Teacher, Enrollment, AdminConfig, Notice, SharedLink, StudentFeedback, createCourseSlug } from "./lib/types";
+import { Course, Teacher, Enrollment, AdminConfig, Notice, SharedLink, StudentFeedback } from "./lib/types";
 
 // Client Core Components
 import Navbar from "./components/Navbar";
@@ -69,7 +67,6 @@ export default function App() {
   const [sharedLinks, setSharedLinks] = useState<SharedLink[]>([]);
   const [config, setConfig] = useState<Partial<AdminConfig> | null>(null);
   const [fetching, setFetching] = useState(true);
-  const [copiedCourseId, setCopiedCourseId] = useState<string | null>(null);
 
   // Authentication State
   const [adminToken, setAdminToken] = useState<string>(() => {
@@ -183,121 +180,6 @@ export default function App() {
   useEffect(() => {
     loadInitialData();
   }, []);
-
-  // Helper to extract course parameter from URL path (/course/:slugOrId) or query params (?course=...)
-  const getCourseParamFromURL = (): string | null => {
-    const pathname = window.location.pathname;
-    const match = pathname.match(/^\/courses?\/([^/]+)/i);
-    if (match && match[1]) {
-      return decodeURIComponent(match[1]);
-    }
-    const params = new URLSearchParams(window.location.search);
-    return params.get("course") || params.get("course_id") || null;
-  };
-
-  // Helper to match course by ID, custom slug, or generated slug
-  const findCourseByParam = (coursesList: Course[], param: string) => {
-    if (!param) return null;
-    const decoded = decodeURIComponent(param).trim().toLowerCase();
-    
-    return coursesList.find((c) => {
-      const cId = (c.id || "").toLowerCase();
-      const cCustomSlug = (c.slug || "").trim().toLowerCase();
-      const cAutoSlug = createCourseSlug(c).toLowerCase();
-      
-      return (
-        cId === decoded ||
-        (cCustomSlug && cCustomSlug === decoded) ||
-        cAutoSlug === decoded ||
-        encodeURIComponent(cAutoSlug).toLowerCase() === decoded
-      );
-    }) || null;
-  };
-
-  // Initial Route Detection & Deep Linking: Auto-open course detail or admin page
-  useEffect(() => {
-    if (window.location.pathname === "/admin" || window.location.pathname === "/admin/") {
-      if (adminToken) {
-        setCurrentView("admin-dashboard");
-      } else {
-        setCurrentView("admin-login");
-      }
-      return;
-    }
-
-    if (courses.length > 0) {
-      const courseParam = getCourseParamFromURL();
-      if (courseParam && currentView !== "admin-dashboard" && currentView !== "admin-login") {
-        const targetCourse = findCourseByParam(courses, courseParam);
-        if (targetCourse) {
-          setSelectedCourseId(targetCourse.id);
-          setCurrentView("course-detail");
-        }
-      }
-    }
-  }, [courses, adminToken]);
-
-  // Dynamic SEO Document Title & URL path synchronization (/course/slug-or-id)
-  useEffect(() => {
-    if (currentView === "course-detail" && selectedCourseId) {
-      const activeCourse = courses.find((c) => c.id === selectedCourseId);
-      if (activeCourse) {
-        document.title = `${activeCourse.title} | প্রস্তুতি ঢাবি`;
-        const slug = createCourseSlug(activeCourse);
-        const targetPath = `/course/${encodeURIComponent(slug)}`;
-        
-        if (window.location.pathname !== targetPath) {
-          window.history.pushState({}, "", targetPath);
-        }
-      }
-    } else if (currentView === "home") {
-      document.title = "প্রস্তুতি ঢাবি - ঢাকা বিশ্ববিদ্যালয় ভর্তি প্রস্তুতি প্ল্যাটফর্ম";
-      if (window.location.pathname !== "/" && window.location.pathname !== "") {
-        if (window.location.pathname.startsWith("/course") || window.location.search.includes("course=")) {
-          window.history.pushState({}, "", "/");
-        }
-      }
-    } else if (currentView === "admin-dashboard") {
-      document.title = "এডমিন ড্যাশবোর্ড | প্রস্তুতি ঢাবি";
-      if (window.location.pathname !== "/admin") {
-        window.history.pushState({}, "", "/admin");
-      }
-    } else if (currentView === "admin-login") {
-      document.title = "এডমিন লগইন | প্রস্তুতি ঢাবি";
-    }
-  }, [currentView, selectedCourseId, courses]);
-
-  // Browser Back/Forward navigation popstate listener
-  useEffect(() => {
-    const handlePopState = () => {
-      if (window.location.pathname === "/admin" || window.location.pathname === "/admin/") {
-        if (adminToken) {
-          setCurrentView("admin-dashboard");
-        } else {
-          setCurrentView("admin-login");
-        }
-        return;
-      }
-
-      const courseParam = getCourseParamFromURL();
-      if (courseParam && courses.length > 0) {
-        const found = findCourseByParam(courses, courseParam);
-        if (found) {
-          setSelectedCourseId(found.id);
-          setCurrentView("course-detail");
-          return;
-        }
-      }
-      
-      if (!courseParam && currentView === "course-detail") {
-        setCurrentView("home");
-        setSelectedCourseId(null);
-      }
-    };
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [courses, currentView, adminToken]);
 
   // Fetch admin confidential records if logged in
   const loadAdminAuthorizedRecords = async () => {
@@ -1071,28 +953,6 @@ export default function App() {
 
                                 {/* Actions trigger */}
                                 <div className="flex items-center space-x-2 border-t border-primary/5 pt-4 mt-4">
-                                  <button
-                                    onClick={() => {
-                                      const url = `${window.location.origin}${window.location.pathname}?course=${course.id}`;
-                                      navigator.clipboard.writeText(url);
-                                      setCopiedCourseId(course.id);
-                                      setTimeout(() => setCopiedCourseId(null), 2500);
-                                    }}
-                                    className={`px-2.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-1 border cursor-pointer transition-all ${
-                                      copiedCourseId === course.id
-                                        ? "bg-green-500/10 text-green-700 border-green-500/30"
-                                        : "bg-primary/5 hover:bg-primary/10 text-primary border-primary/15"
-                                    }`}
-                                    title="কোর্সের সরাসরি শেয়ার করার লিংক কপি করুন"
-                                  >
-                                    {copiedCourseId === course.id ? (
-                                      <Check className="h-3.5 w-3.5 text-green-600" />
-                                    ) : (
-                                      <Share2 className="h-3.5 w-3.5 text-primary" />
-                                    )}
-                                    <span>{copiedCourseId === course.id ? "কপি হয়েছে!" : "লিংক"}</span>
-                                  </button>
-
                                   <button
                                     onClick={() => setEditingCourse(course)}
                                     className="flex-grow bg-accent hover:bg-primary/5 text-primary text-xs py-2 rounded-lg font-bold flex items-center justify-center space-x-1"

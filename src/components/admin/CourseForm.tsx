@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Save, X, ImagePlus, Loader2, Share2, Copy, Check } from "lucide-react";
+import { Plus, Trash2, Save, X, ImagePlus, Loader2 } from "lucide-react";
 import { apiFetch as fetch } from "../../lib/apiInterceptor";
-import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum, createCourseSlug } from "../../lib/types";
+import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum } from "../../lib/types";
 
 interface CourseFormProps {
   course?: Course | null;
@@ -14,7 +14,6 @@ interface CourseFormProps {
 
 export default function CourseForm({ course, teachers, categories = [], onSave, onCancel, adminToken }: CourseFormProps) {
   const [title, setTitle] = useState(course?.title || "");
-  const [slug, setSlug] = useState(course?.slug || "");
   const [category, setCategory] = useState(course?.category || (categories.length > 0 ? categories[0].name : "বিজ্ঞান"));
   const [shortDesc, setShortDesc] = useState(course?.short_description || "");
   const [fullDesc, setFullDesc] = useState(course?.full_description || "");
@@ -256,7 +255,6 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
     try {
       await onSave({
         title: title.trim(),
-        slug: slug.trim(),
         category,
         short_description: shortDesc.trim(),
         full_description: fullDesc.trim(),
@@ -279,17 +277,6 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
     }
   };
 
-  const [copiedLink, setCopiedLink] = useState(false);
-  const courseSlug = course ? createCourseSlug({ ...course, slug, title }) : createCourseSlug({ slug, title });
-  const directCourseUrl = courseSlug ? `${window.location.origin}/course/${encodeURIComponent(courseSlug)}` : "";
-
-  const handleCopyFormLink = () => {
-    if (!directCourseUrl) return;
-    navigator.clipboard.writeText(directCourseUrl);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2500);
-  };
-
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-primary/10 rounded-2xl p-6 sm:p-8 space-y-6">
       <div className="flex items-center justify-between border-b border-primary/5 pb-4">
@@ -305,34 +292,6 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
         </button>
       </div>
 
-      {course?.id && (
-        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-dark flex items-center gap-1.5">
-              <Share2 className="w-4 h-4 text-primary" />
-              <span>এই কোর্সের সরাসরি শেয়ার লিংক (Direct Link):</span>
-            </label>
-            <button
-              type="button"
-              onClick={handleCopyFormLink}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${
-                copiedLink ? "bg-green-600 text-white border-green-600" : "bg-primary text-secondary border-primary hover:bg-primary/90"
-              }`}
-            >
-              {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? "লিংক কপি হয়েছে!" : "লিংক কপি করুন"}</span>
-            </button>
-          </div>
-          <input
-            type="text"
-            readOnly
-            value={directCourseUrl}
-            className="w-full text-xs px-3.5 py-2 border border-primary/15 rounded-xl bg-white text-gray-700 font-mono select-all outline-none"
-          />
-          <p className="text-[11px] text-gray-500">শিক্ষার্থী বা যে কাউকে এই লিংক পাঠালে সে ওয়েবসাইটে সরাসরি এই নির্দিষ্ট কোর্সের পেইজে চলে আসবে।</p>
-        </div>
-      )}
-
       {error && (
         <div className="bg-red-50 text-red-700 text-xs sm:text-sm p-4 rounded-xl border border-red-100">
           {error}
@@ -341,7 +300,7 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Name Title */}
-        <div>
+        <div className="md:col-span-2">
           <label className="block text-xs sm:text-sm font-bold text-dark mb-1.5">
             কোর্সের নাম/শিরোনাম <span className="text-red-500">*</span>
           </label>
@@ -352,20 +311,6 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
             onChange={(e) => setTitle(e.target.value)}
             placeholder="যেমন: ঢাবি 'ক' ইউনিট সম্পূর্ণ ভর্তি প্রস্তুতি"
             className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none"
-          />
-        </div>
-
-        {/* Custom Slug Input */}
-        <div>
-          <label className="block text-xs sm:text-sm font-bold text-dark mb-1.5">
-            কাস্টম ইউআরএল স্লাগ / Slug (ঐচ্ছিক)
-          </label>
-          <input
-            type="text"
-            value={slug}
-            onChange={(e) => setSlug(e.target.value)}
-            placeholder="যেমন: du-a-unit-batch-2026 (খালি রাখলে স্বয়ংক্রিয়ভাবে তৈরি হবে)"
-            className="w-full text-xs sm:text-sm px-4 py-2.5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary/10 focus:border-primary outline-none font-mono text-gray-700"
           />
         </div>
 
