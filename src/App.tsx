@@ -184,6 +184,17 @@ export default function App() {
     loadInitialData();
   }, []);
 
+  // Helper to extract course parameter from URL path (/course/:slugOrId) or query params (?course=...)
+  const getCourseParamFromURL = (): string | null => {
+    const pathname = window.location.pathname;
+    const match = pathname.match(/^\/courses?\/([^/]+)/i);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+    const params = new URLSearchParams(window.location.search);
+    return params.get("course") || params.get("course_id") || null;
+  };
+
   // Helper to match course by ID, custom slug, or generated slug
   const findCourseByParam = (coursesList: Course[], param: string) => {
     if (!param) return null;
@@ -203,11 +214,19 @@ export default function App() {
     }) || null;
   };
 
-  // Deep Linking: Auto-open course detail if ?course=slug_or_id is in URL
+  // Initial Route Detection & Deep Linking: Auto-open course detail or admin page
   useEffect(() => {
+    if (window.location.pathname === "/admin" || window.location.pathname === "/admin/") {
+      if (adminToken) {
+        setCurrentView("admin-dashboard");
+      } else {
+        setCurrentView("admin-login");
+      }
+      return;
+    }
+
     if (courses.length > 0) {
-      const params = new URLSearchParams(window.location.search);
-      const courseParam = params.get("course") || params.get("course_id");
+      const courseParam = getCourseParamFromURL();
       if (courseParam && currentView !== "admin-dashboard" && currentView !== "admin-login") {
         const targetCourse = findCourseByParam(courses, courseParam);
         if (targetCourse) {
@@ -216,33 +235,33 @@ export default function App() {
         }
       }
     }
-  }, [courses]);
+  }, [courses, adminToken]);
 
-  // Dynamic SEO Document Title & URL synchronization with clean course slugs
+  // Dynamic SEO Document Title & URL path synchronization (/course/slug-or-id)
   useEffect(() => {
     if (currentView === "course-detail" && selectedCourseId) {
       const activeCourse = courses.find((c) => c.id === selectedCourseId);
       if (activeCourse) {
         document.title = `${activeCourse.title} | প্রস্তুতি ঢাবি`;
         const slug = createCourseSlug(activeCourse);
-        const params = new URLSearchParams(window.location.search);
-        if (params.get("course") !== slug) {
-          params.set("course", slug);
-          window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`);
+        const targetPath = `/course/${encodeURIComponent(slug)}`;
+        
+        if (window.location.pathname !== targetPath) {
+          window.history.pushState({}, "", targetPath);
         }
       }
     } else if (currentView === "home") {
       document.title = "প্রস্তুতি ঢাবি - ঢাকা বিশ্ববিদ্যালয় ভর্তি প্রস্তুতি প্ল্যাটফর্ম";
-      const params = new URLSearchParams(window.location.search);
-      if (params.has("course") || params.has("course_id")) {
-        params.delete("course");
-        params.delete("course_id");
-        const newSearch = params.toString();
-        const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
-        window.history.pushState({}, "", newUrl);
+      if (window.location.pathname !== "/" && window.location.pathname !== "") {
+        if (window.location.pathname.startsWith("/course") || window.location.search.includes("course=")) {
+          window.history.pushState({}, "", "/");
+        }
       }
     } else if (currentView === "admin-dashboard") {
       document.title = "এডমিন ড্যাশবোর্ড | প্রস্তুতি ঢাবি";
+      if (window.location.pathname !== "/admin") {
+        window.history.pushState({}, "", "/admin");
+      }
     } else if (currentView === "admin-login") {
       document.title = "এডমিন লগইন | প্রস্তুতি ঢাবি";
     }
@@ -251,8 +270,16 @@ export default function App() {
   // Browser Back/Forward navigation popstate listener
   useEffect(() => {
     const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      const courseParam = params.get("course") || params.get("course_id");
+      if (window.location.pathname === "/admin" || window.location.pathname === "/admin/") {
+        if (adminToken) {
+          setCurrentView("admin-dashboard");
+        } else {
+          setCurrentView("admin-login");
+        }
+        return;
+      }
+
+      const courseParam = getCourseParamFromURL();
       if (courseParam && courses.length > 0) {
         const found = findCourseByParam(courses, courseParam);
         if (found) {
@@ -261,6 +288,7 @@ export default function App() {
           return;
         }
       }
+      
       if (!courseParam && currentView === "course-detail") {
         setCurrentView("home");
         setSelectedCourseId(null);
@@ -269,7 +297,7 @@ export default function App() {
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, [courses, currentView]);
+  }, [courses, currentView, adminToken]);
 
   // Fetch admin confidential records if logged in
   const loadAdminAuthorizedRecords = async () => {

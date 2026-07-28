@@ -16,7 +16,7 @@ export default function CourseCard({ course, onSelect }: CourseCardProps) {
   const handleCopyDirectLink = (e: React.MouseEvent) => {
     e.stopPropagation();
     const slug = createCourseSlug(course);
-    const url = `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(slug)}`;
+    const url = `${window.location.origin}/course/${encodeURIComponent(slug)}`;
     navigator.clipboard.writeText(url);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

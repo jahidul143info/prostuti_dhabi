@@ -281,7 +281,7 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
 
   const [copiedLink, setCopiedLink] = useState(false);
   const courseSlug = course ? createCourseSlug({ ...course, slug, title }) : createCourseSlug({ slug, title });
-  const directCourseUrl = courseSlug ? `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(courseSlug)}` : "";
+  const directCourseUrl = courseSlug ? `${window.location.origin}/course/${encodeURIComponent(courseSlug)}` : "";
 
   const handleCopyFormLink = () => {
     if (!directCourseUrl) return;

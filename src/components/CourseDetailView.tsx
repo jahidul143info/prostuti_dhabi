@@ -35,7 +35,7 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
 
   const handleCopyLink = () => {
     const slug = createCourseSlug(course);
-    const directUrl = `${window.location.origin}${window.location.pathname}?course=${encodeURIComponent(slug)}`;
+    const directUrl = `${window.location.origin}/course/${encodeURIComponent(slug)}`;
     navigator.clipboard.writeText(directUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2500);
