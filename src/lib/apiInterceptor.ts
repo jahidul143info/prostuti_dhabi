@@ -76,6 +76,8 @@ async function handleSupabaseFallback(url: string, init?: RequestInit): Promise<
         about_mission: body.about_mission !== undefined ? body.about_mission : (dbRow?.about_mission || ""),
         helpline_number: body.helpline_number !== undefined ? body.helpline_number : (dbRow?.helpline_number || ""),
         success_student_count: body.success_student_count !== undefined ? body.success_student_count : (dbRow?.success_student_count || ""),
+        review_count: body.review_count !== undefined ? body.review_count : (dbRow?.review_count || "150+"),
+        review_label: body.review_label !== undefined ? body.review_label : (dbRow?.review_label || "Review"),
         password_hash: newPasswordHash
       };
 

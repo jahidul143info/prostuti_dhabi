@@ -100,6 +100,8 @@ interface LocalDB {
     rocket_number?: string;
     helpline_number?: string;
     success_student_count?: string;
+    review_count?: string;
+    review_label?: string;
     created_at: string;
   };
   student_feedbacks?: Array<{
@@ -368,6 +370,8 @@ const INITIAL_DB: LocalDB = {
     rocket_number: "01811223344",
     helpline_number: "+880 1712-345678",
     success_student_count: "৫,০০০+",
+    review_count: "150+",
+    review_label: "Review",
     created_at: new Date().toISOString()
   },
   teachers: DEFAULT_TEACHERS,
@@ -1156,6 +1160,8 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
     about_mission: payload.about_mission || db.admin_config.about_mission,
     helpline_number: payload.helpline_number !== undefined ? payload.helpline_number : db.admin_config.helpline_number,
     success_student_count: payload.success_student_count !== undefined ? payload.success_student_count : db.admin_config.success_student_count,
+    review_count: payload.review_count !== undefined ? payload.review_count : (db.admin_config.review_count || "150+"),
+    review_label: payload.review_label !== undefined ? payload.review_label : (db.admin_config.review_label || "Review"),
     password_hash: newPasswordHash
   };
 
@@ -1179,14 +1185,16 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         about_mission: updatedConfig.about_mission,
         password_hash: updatedConfig.password_hash,
         helpline_number: updatedConfig.helpline_number,
-        success_student_count: updatedConfig.success_student_count
+        success_student_count: updatedConfig.success_student_count,
+        review_count: updatedConfig.review_count,
+        review_label: updatedConfig.review_label
       };
 
       if (!dbRow) {
         let { error: insertErr } = await supabaseClient.from("admin_config").insert(updatePayload);
-        if (insertErr && (insertErr.message.includes("helpline_number") || insertErr.message.includes("success_student_count") || insertErr.code === "42703")) {
+        if (insertErr && (insertErr.message.includes("helpline_number") || insertErr.message.includes("success_student_count") || insertErr.message.includes("review_count") || insertErr.code === "42703")) {
           console.warn("Supabase insert with optional columns failed, retrying with safer subset...");
-          const { helpline_number, success_student_count, ...retryPayload } = updatePayload;
+          const { helpline_number, success_student_count, review_count, review_label, ...retryPayload } = updatePayload;
           const { error: retryErr } = await supabaseClient.from("admin_config").insert(retryPayload);
           insertErr = retryErr;
         }
@@ -1196,9 +1204,9 @@ app.put("/api/admin/settings", adminAuth, async (req, res) => {
         }
       } else {
         let { error: updateErr } = await supabaseClient.from("admin_config").update(updatePayload).eq("id", dbRow.id);
-        if (updateErr && (updateErr.message.includes("helpline_number") || updateErr.message.includes("success_student_count") || updateErr.code === "42703")) {
+        if (updateErr && (updateErr.message.includes("helpline_number") || updateErr.message.includes("success_student_count") || updateErr.message.includes("review_count") || updateErr.code === "42703")) {
           console.warn("Supabase update with optional columns failed, retrying with safer subset...");
-          const { helpline_number, success_student_count, ...retryPayload } = updatePayload;
+          const { helpline_number, success_student_count, review_count, review_label, ...retryPayload } = updatePayload;
           const { error: retryErr } = await supabaseClient.from("admin_config").update(retryPayload).eq("id", dbRow.id);
           updateErr = retryErr;
         }

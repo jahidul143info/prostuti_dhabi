@@ -76,6 +76,8 @@ export interface AdminConfig {
   rocket_number?: string;
   helpline_number?: string;
   success_student_count?: string;
+  review_count?: string;
+  review_label?: string;
   created_at?: string;
 }
 

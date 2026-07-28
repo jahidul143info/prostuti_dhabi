@@ -101,6 +101,8 @@ export default function App() {
   const [rocketNumInput, setRocketNumInput] = useState("");
   const [helplineNumInput, setHelplineNumInput] = useState("");
   const [successStudentCountInput, setSuccessStudentCountInput] = useState("");
+  const [reviewCountInput, setReviewCountInput] = useState("");
+  const [reviewLabelInput, setReviewLabelInput] = useState("");
   const [aboutTextInput, setAboutTextInput] = useState("");
   const [aboutMissionInput, setAboutMissionInput] = useState("");
   const [adminNewPasswordInput, setAdminNewPasswordInput] = useState("");
@@ -127,6 +129,8 @@ export default function App() {
         setRocketNumInput(configData.rocket_number || "");
         setHelplineNumInput(configData.helpline_number || "");
         setSuccessStudentCountInput(configData.success_student_count || "");
+        setReviewCountInput(configData.review_count || "150+");
+        setReviewLabelInput(configData.review_label || "Review");
         setAboutTextInput(configData.about_text || "");
         setAboutMissionInput(configData.about_mission || "");
       }
@@ -464,6 +468,8 @@ export default function App() {
           rocket_number: rocketNumInput,
           helpline_number: helplineNumInput,
           success_student_count: successStudentCountInput,
+          review_count: reviewCountInput,
+          review_label: reviewLabelInput,
           about_text: aboutTextInput,
           about_mission: aboutMissionInput,
           new_password: adminNewPasswordInput
@@ -1189,13 +1195,35 @@ export default function App() {
                           />
                         </div>
                         {/* Success Student Count */}
-                        <div className="sm:col-span-3">
+                        <div className="sm:col-span-2">
                           <label className="block text-xs font-bold text-dark mb-1.5">সফল শিক্ষার্থীর সংখ্যা (যেমন: ৫,০০০+)</label>
                           <input
                             type="text"
                             value={successStudentCountInput}
                             onChange={(e) => setSuccessStudentCountInput(e.target.value)}
                             placeholder="যেমন: ৫,০০০+"
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
+                        {/* Review Count */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-dark mb-1.5">রিভিউ সংখ্যা (যেমন: 150+)</label>
+                          <input
+                            type="text"
+                            value={reviewCountInput}
+                            onChange={(e) => setReviewCountInput(e.target.value)}
+                            placeholder="যেমন: 150+"
+                            className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
+                          />
+                        </div>
+                        {/* Review Label */}
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold text-dark mb-1.5">রিভিউ লেবেল/টেক্সট (যেমন: Review)</label>
+                          <input
+                            type="text"
+                            value={reviewLabelInput}
+                            onChange={(e) => setReviewLabelInput(e.target.value)}
+                            placeholder="যেমন: Review"
                             className="w-full px-4 py-2.5 border border-primary/10 rounded-xl outline-none font-sans"
                           />
                         </div>

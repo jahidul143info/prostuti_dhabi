@@ -120,8 +120,12 @@ export default function HeroSection({ config, onSeeCourses, onSeeAbout }: HeroSe
               <p className="text-white/60 text-xs mt-1">কমন উপযোগী লেকচার শিট</p>
             </div>
             <div className="text-center">
-              <p className="text-secondary text-2xl sm:text-3xl font-black font-sans">১-টু-১</p>
-              <p className="text-white/60 text-xs mt-1">মেন্টরশিপ ও ওএমআর এনালাইসিস</p>
+              <p className="text-secondary text-2xl sm:text-3xl font-black font-sans">
+                {config?.review_count || "150+"}
+              </p>
+              <p className="text-white/60 text-xs mt-1">
+                {config?.review_label || "Review"}
+              </p>
             </div>
           </motion.div>
         </motion.div>
