@@ -35,26 +35,29 @@ export default function CourseCard({ course, onSelect }: CourseCardProps) {
         <div className="absolute top-3 left-3 bg-primary text-secondary text-[10px] font-black px-2.5 py-1 rounded-lg border border-secondary/20 shadow-md uppercase tracking-wider font-sans">
           {course.category}
         </div>
-
-        {/* Enrolled Badge over photo top right if present */}
-        {course.enrolled_count && (
-          <div className="absolute top-3 right-3 bg-dark/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg border border-white/10 shadow-md flex items-center gap-1 font-sans">
-            <Users className="w-3 h-3 text-secondary" />
-            <span>{course.enrolled_count} শিক্ষার্থী</span>
-          </div>
-        )}
       </div>
 
       {/* Card Contents */}
       <div className="p-5 sm:p-6 flex flex-col flex-grow">
-        {/* Optional Timer Banner */}
-        {course.timer_enabled && course.timer_end_time && (
-          <div className="mb-3">
-            <CountdownTimer
-              endTime={course.timer_end_time}
-              label={course.timer_label || "অফার শেষ হতে বাকি:"}
-              variant="card"
-            />
+        {/* Top Row under cover photo: Timer (Left) & Enrolled Students Tag (Right) */}
+        {(course.enrolled_count || (course.timer_enabled && course.timer_end_time)) && (
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div>
+              {course.timer_enabled && course.timer_end_time && (
+                <CountdownTimer
+                  endTime={course.timer_end_time}
+                  label={course.timer_label || "অফার শেষ হতে বাকি:"}
+                  variant="card"
+                />
+              )}
+            </div>
+
+            {course.enrolled_count && (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/5 text-primary font-extrabold text-[11px] border border-primary/15 shrink-0 ml-auto font-sans shadow-2xs">
+                <Users className="w-3.5 h-3.5 text-primary" />
+                <span>{course.enrolled_count} শিক্ষার্থী</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -78,12 +81,6 @@ export default function CourseCard({ course, onSelect }: CourseCardProps) {
             <BookOpen className="h-4 w-4 text-primary opacity-80 shrink-0" />
             <span className="truncate">লেকচার: {course.total_classes ? `${course.total_classes}টি` : "উন্মুক্ত"}</span>
           </div>
-          {course.enrolled_count && (
-            <div className="flex items-center space-x-1.5 col-span-2 text-primary font-bold bg-primary/5 px-2.5 py-1 rounded-lg border border-primary/10">
-              <Users className="h-3.5 w-3.5 text-primary shrink-0" />
-              <span>এনরোল্ড শিক্ষার্থী: <span className="font-extrabold text-dark">{course.enrolled_count}</span></span>
-            </div>
-          )}
         </div>
 
         {/* Price & Primary Action */}
