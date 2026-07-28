@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Plus, Trash2, Save, X, ImagePlus, Loader2 } from "lucide-react";
+import { Plus, Trash2, Save, X, ImagePlus, Loader2, Share2, Copy, Check } from "lucide-react";
 import { apiFetch as fetch } from "../../lib/apiInterceptor";
 import { Course, Teacher, CurriculumSubject, CurriculumChapter, CurriculumClass, parseCurriculum } from "../../lib/types";
 
@@ -277,6 +277,16 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
     }
   };
 
+  const [copiedLink, setCopiedLink] = useState(false);
+  const directCourseUrl = course?.id ? `${window.location.origin}${window.location.pathname}?course=${course.id}` : "";
+
+  const handleCopyFormLink = () => {
+    if (!directCourseUrl) return;
+    navigator.clipboard.writeText(directCourseUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-primary/10 rounded-2xl p-6 sm:p-8 space-y-6">
       <div className="flex items-center justify-between border-b border-primary/5 pb-4">
@@ -291,6 +301,34 @@ export default function CourseForm({ course, teachers, categories = [], onSave, 
           <X className="h-5 w-5" />
         </button>
       </div>
+
+      {course?.id && (
+        <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 space-y-2">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-dark flex items-center gap-1.5">
+              <Share2 className="w-4 h-4 text-primary" />
+              <span>এই কোর্সের সরাসরি শেয়ার লিংক (Direct Link):</span>
+            </label>
+            <button
+              type="button"
+              onClick={handleCopyFormLink}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                copiedLink ? "bg-green-600 text-white border-green-600" : "bg-primary text-secondary border-primary hover:bg-primary/90"
+              }`}
+            >
+              {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedLink ? "লিংক কপি হয়েছে!" : "লিংক কপি করুন"}</span>
+            </button>
+          </div>
+          <input
+            type="text"
+            readOnly
+            value={directCourseUrl}
+            className="w-full text-xs px-3.5 py-2 border border-primary/15 rounded-xl bg-white text-gray-700 font-mono select-all outline-none"
+          />
+          <p className="text-[11px] text-gray-500">শিক্ষার্থী বা যে কাউকে এই লিংক পাঠালে সে ওয়েবসাইটে সরাসরি এই নির্দিষ্ট কোর্সের পেইজে চলে আসবে।</p>
+        </div>
+      )}
 
       {error && (
         <div className="bg-red-50 text-red-700 text-xs sm:text-sm p-4 rounded-xl border border-red-100">

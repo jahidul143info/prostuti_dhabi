@@ -9,7 +9,9 @@ import {
   GraduationCap,
   Sparkles,
   PlayCircle,
-  Users
+  Users,
+  Share2,
+  Check
 } from "lucide-react";
 import { Course, Teacher, AdminConfig, parseCurriculum } from "../lib/types";
 import EnrollmentForm from "./EnrollmentForm";
@@ -29,6 +31,15 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
   const [selectedSubjectIdx, setSelectedSubjectIdx] = useState(0);
   const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  const handleCopyLink = () => {
+    const directUrl = `${window.location.origin}${window.location.pathname}?course=${course.id}`;
+    navigator.clipboard.writeText(directUrl);
+    setCopiedLink(true);
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
+
   const courseTeachers = course.teachers || [];
 
   const toggleWeek = (index: number) => {
@@ -41,14 +52,28 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
     <div className="bg-[#fafdfb] min-h-screen pt-28 pb-20 font-sans" id="course-detail-view">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Back Link indicator */}
-        <button
-          onClick={onBack}
-          className="inline-flex items-center space-x-1.5 text-primary hover:text-secondary font-bold text-sm mb-8 transition-colors group cursor-pointer"
-        >
-          <ArrowLeft className="h-4 p-0.5 w-4 transition-transform group-hover:-translate-x-1" />
-          <span>কোর্সসমূহে ফিরে যান</span>
-        </button>
+        {/* Top Header Bar with Back Link & Share Link */}
+        <div className="flex items-center justify-between gap-4 mb-8">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center space-x-1.5 text-primary hover:text-secondary font-bold text-sm transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="h-4 p-0.5 w-4 transition-transform group-hover:-translate-x-1" />
+            <span>কোর্সসমূহে ফিরে যান</span>
+          </button>
+
+          <button
+            onClick={handleCopyLink}
+            className={`inline-flex items-center space-x-2 font-bold text-xs sm:text-sm px-4 py-2 rounded-xl transition-all cursor-pointer border ${
+              copiedLink 
+                ? "bg-green-500/10 border-green-500/30 text-green-700" 
+                : "bg-primary/10 hover:bg-primary/20 text-primary border-primary/20"
+            }`}
+          >
+            {copiedLink ? <Check className="w-4 h-4 text-green-600" /> : <Share2 className="w-4 h-4 text-primary" />}
+            <span>{copiedLink ? "ডাইরেক্ট লিংক কপি হয়েছে!" : "কোর্স লিংক শেয়ার করুন"}</span>
+          </button>
+        </div>
 
         {/* Master layout details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">

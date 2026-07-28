@@ -22,7 +22,9 @@ import {
   ExternalLink,
   Megaphone,
   Bell,
-  X
+  X,
+  Share2,
+  Check
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -67,6 +69,7 @@ export default function App() {
   const [sharedLinks, setSharedLinks] = useState<SharedLink[]>([]);
   const [config, setConfig] = useState<Partial<AdminConfig> | null>(null);
   const [fetching, setFetching] = useState(true);
+  const [copiedCourseId, setCopiedCourseId] = useState<string | null>(null);
 
   // Authentication State
   const [adminToken, setAdminToken] = useState<string>(() => {
@@ -180,6 +183,73 @@ export default function App() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Deep Linking: Auto-open course detail if ?course=course_id is in URL
+  useEffect(() => {
+    if (courses.length > 0) {
+      const params = new URLSearchParams(window.location.search);
+      const courseIdParam = params.get("course") || params.get("course_id");
+      if (courseIdParam && currentView !== "admin-dashboard" && currentView !== "admin-login") {
+        const targetCourse = courses.find((c) => c.id === courseIdParam);
+        if (targetCourse) {
+          setSelectedCourseId(targetCourse.id);
+          setCurrentView("course-detail");
+        }
+      }
+    }
+  }, [courses]);
+
+  // Dynamic SEO Document Title & URL synchronization
+  useEffect(() => {
+    if (currentView === "course-detail" && selectedCourseId) {
+      const activeCourse = courses.find((c) => c.id === selectedCourseId);
+      if (activeCourse) {
+        document.title = `${activeCourse.title} | প্রস্তুতি ঢাবি`;
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("course") !== selectedCourseId) {
+          params.set("course", selectedCourseId);
+          window.history.pushState({}, "", `${window.location.pathname}?${params.toString()}`);
+        }
+      }
+    } else if (currentView === "home") {
+      document.title = "প্রস্তুতি ঢাবি - ঢাকা বিশ্ববিদ্যালয় ভর্তি প্রস্তুতি প্ল্যাটফর্ম";
+      const params = new URLSearchParams(window.location.search);
+      if (params.has("course") || params.has("course_id")) {
+        params.delete("course");
+        params.delete("course_id");
+        const newSearch = params.toString();
+        const newUrl = newSearch ? `${window.location.pathname}?${newSearch}` : window.location.pathname;
+        window.history.pushState({}, "", newUrl);
+      }
+    } else if (currentView === "admin-dashboard") {
+      document.title = "এডমিন ড্যাশবোর্ড | প্রস্তুতি ঢাবি";
+    } else if (currentView === "admin-login") {
+      document.title = "এডমিন লগইন | প্রস্তুতি ঢাবি";
+    }
+  }, [currentView, selectedCourseId, courses]);
+
+  // Browser Back/Forward navigation popstate listener
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const courseIdParam = params.get("course") || params.get("course_id");
+      if (courseIdParam && courses.length > 0) {
+        const found = courses.find((c) => c.id === courseIdParam);
+        if (found) {
+          setSelectedCourseId(found.id);
+          setCurrentView("course-detail");
+          return;
+        }
+      }
+      if (!courseIdParam && currentView === "course-detail") {
+        setCurrentView("home");
+        setSelectedCourseId(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [courses, currentView]);
 
   // Fetch admin confidential records if logged in
   const loadAdminAuthorizedRecords = async () => {
@@ -953,6 +1023,28 @@ export default function App() {
 
                                 {/* Actions trigger */}
                                 <div className="flex items-center space-x-2 border-t border-primary/5 pt-4 mt-4">
+                                  <button
+                                    onClick={() => {
+                                      const url = `${window.location.origin}${window.location.pathname}?course=${course.id}`;
+                                      navigator.clipboard.writeText(url);
+                                      setCopiedCourseId(course.id);
+                                      setTimeout(() => setCopiedCourseId(null), 2500);
+                                    }}
+                                    className={`px-2.5 py-2 rounded-lg text-xs font-bold flex items-center space-x-1 border cursor-pointer transition-all ${
+                                      copiedCourseId === course.id
+                                        ? "bg-green-500/10 text-green-700 border-green-500/30"
+                                        : "bg-primary/5 hover:bg-primary/10 text-primary border-primary/15"
+                                    }`}
+                                    title="কোর্সের সরাসরি শেয়ার করার লিংক কপি করুন"
+                                  >
+                                    {copiedCourseId === course.id ? (
+                                      <Check className="h-3.5 w-3.5 text-green-600" />
+                                    ) : (
+                                      <Share2 className="h-3.5 w-3.5 text-primary" />
+                                    )}
+                                    <span>{copiedCourseId === course.id ? "কপি হয়েছে!" : "লিংক"}</span>
+                                  </button>
+
                                   <button
                                     onClick={() => setEditingCourse(course)}
                                     className="flex-grow bg-accent hover:bg-primary/5 text-primary text-xs py-2 rounded-lg font-bold flex items-center justify-center space-x-1"
