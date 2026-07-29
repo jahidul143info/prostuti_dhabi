@@ -53,10 +53,34 @@ import NoticeManager from "./components/admin/NoticeManager";
 import LinkManager from "./components/admin/LinkManager";
 import FeedbackManager from "./components/admin/FeedbackManager";
 
+// Helper to parse current location pathname into view & course ID
+function getRouteFromLocation(): { view: "home" | "course-detail" | "admin-login" | "admin-dashboard"; courseId: string | null } {
+  const pathname = window.location.pathname;
+  
+  // Match /course/:id or /courses/:id
+  const courseMatch = pathname.match(/^\/(?:course|courses)\/([^/]+)/i);
+  if (courseMatch && courseMatch[1]) {
+    const courseId = decodeURIComponent(courseMatch[1]);
+    return { view: "course-detail", courseId };
+  }
+
+  // Match /admin or /admin/dashboard or /admin/login
+  if (pathname.startsWith("/admin")) {
+    const token = localStorage.getItem("prostuti_dhabi_admin_token");
+    return { view: token ? "admin-dashboard" : "admin-login", courseId: null };
+  }
+
+  return { view: "home", courseId: null };
+}
+
 export default function App() {
-  // Views navigation router
-  const [currentView, setCurrentView] = useState<"home" | "course-detail" | "admin-login" | "admin-dashboard">("home");
-  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  // Views navigation router initialized from URL
+  const [currentView, setCurrentView] = useState<"home" | "course-detail" | "admin-login" | "admin-dashboard">(() => {
+    return getRouteFromLocation().view;
+  });
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(() => {
+    return getRouteFromLocation().courseId;
+  });
 
   // Unified global storage states
   const [courses, setCourses] = useState<Course[]>([]);
@@ -274,19 +298,42 @@ export default function App() {
     }
   };
 
+  // Handle browser Back / Forward button navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = getRouteFromLocation();
+      if (route.view === "course-detail" && route.courseId) {
+        setSelectedCourseId(route.courseId);
+        setCurrentView("course-detail");
+      } else if (route.view === "admin-dashboard" || route.view === "admin-login") {
+        setCurrentView(adminToken ? "admin-dashboard" : "admin-login");
+        setSelectedCourseId(null);
+      } else {
+        setCurrentView("home");
+        setSelectedCourseId(null);
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [adminToken]);
+
   // Action: Admin Logout
   const handleAdminLogout = () => {
     localStorage.removeItem("prostuti_dhabi_admin_token");
     setAdminToken("");
     setAdminPasswordInput("");
-    setCurrentView("home");
+    handleViewChange("home");
   };
 
-  // Navigation setter wrapper
-  const handleViewChange = (view: any, courseId?: string) => {
+  // Navigation setter wrapper with browser history pushState
+  const handleViewChange = (view: any, courseId?: string, skipHistoryPush?: boolean) => {
     if (view === "home") {
       setCurrentView("home");
       setSelectedCourseId(null);
+      if (!skipHistoryPush && window.location.pathname !== "/") {
+        window.history.pushState({ view: "home" }, "", "/");
+      }
       // Synchronize latest active notices on home view entrance
       fetch("/api/notices")
         .then((res) => {
@@ -300,11 +347,15 @@ export default function App() {
       setSelectedCourseId(courseId);
       setCurrentView("course-detail");
       window.scrollTo(0, 0);
-    } else if (view === "admin-dashboard") {
-      if (!adminToken) {
-        setCurrentView("admin-login");
-      } else {
-        setCurrentView("admin-dashboard");
+      const targetPath = `/course/${encodeURIComponent(courseId)}`;
+      if (!skipHistoryPush && window.location.pathname !== targetPath) {
+        window.history.pushState({ view: "course-detail", courseId }, "", targetPath);
+      }
+    } else if (view === "admin-dashboard" || view === "admin-login") {
+      const targetView = (view === "admin-dashboard" && !adminToken) ? "admin-login" : view;
+      setCurrentView(targetView);
+      if (!skipHistoryPush && window.location.pathname !== "/admin") {
+        window.history.pushState({ view: targetView }, "", "/admin");
       }
     } else {
       setCurrentView(view);
@@ -625,20 +676,41 @@ export default function App() {
           )}
 
           {/* VIEW: COURSE DETAIL WINDOWS */}
-          {currentView === "course-detail" && selectedCourseFull && (
-            <motion.div
-              key="course-detail-screen"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <CourseDetailView
-                course={selectedCourseFull}
-                config={config}
-                onBack={() => handleViewChange("home")}
-              />
-            </motion.div>
+          {currentView === "course-detail" && (
+            selectedCourseFull ? (
+              <motion.div
+                key="course-detail-screen"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <CourseDetailView
+                  course={selectedCourseFull}
+                  config={config}
+                  onBack={() => handleViewChange("home")}
+                />
+              </motion.div>
+            ) : fetching ? (
+              <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-[#fafdfb]">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent mb-4"></div>
+                <p className="text-gray-600 font-sans text-sm font-bold">কোর্সের তথ্য লোড হচ্ছে...</p>
+              </div>
+            ) : (
+              <div className="min-h-screen pt-32 pb-20 flex flex-col items-center justify-center bg-[#fafdfb] px-4 text-center">
+                <div className="bg-red-50 text-red-500 p-4 rounded-full mb-4">
+                  <BookOpen className="h-8 w-8" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2 font-sans">কোর্সটি খুঁজে পাওয়া যায়নি</h2>
+                <p className="text-gray-500 text-sm mb-6 font-sans">আপনি যে কোর্সটি খুঁজছেন সেটি বর্তমানে উপলব্ধ নয় অথবা আইডি ভুল।</p>
+                <button
+                  onClick={() => handleViewChange("home")}
+                  className="bg-primary text-white font-bold px-6 py-2.5 rounded-xl text-sm shadow-md hover:bg-primary/90 transition-all cursor-pointer font-sans"
+                >
+                  হোমপেজে ফিরে যান
+                </button>
+              </div>
+            )
           )}
 
           {/* VIEW: ADMIN ACCESS LOGIN */}

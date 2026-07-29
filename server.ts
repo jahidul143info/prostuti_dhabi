@@ -15,9 +15,10 @@ const PORT = 3000;
 app.use((req, res, next) => {
   const isVercel = !!process.env.VERCEL;
   if (isVercel) {
-    // If Vercel rewrote the path and stripped /api, or if req.url doesn't start with /api, normalize it
-    if (!req.url.startsWith("/api") && !req.url.startsWith("/uploads")) {
-      const apiPrefixes = ["/courses", "/teachers", "/categories", "/notices", "/enroll", "/admin", "/config"];
+    // Only rewrite if it's not a browser page request (text/html)
+    const acceptsHtml = req.headers.accept && req.headers.accept.includes("text/html");
+    if (!acceptsHtml && !req.url.startsWith("/api") && !req.url.startsWith("/uploads")) {
+      const apiPrefixes = ["/teachers", "/categories", "/notices", "/enroll", "/config"];
       if (apiPrefixes.some(p => req.url.startsWith(p))) {
         const originalUrl = req.url;
         req.url = "/api" + req.url;

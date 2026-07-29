@@ -9,7 +9,9 @@ import {
   GraduationCap,
   Sparkles,
   PlayCircle,
-  Users
+  Users,
+  Share2,
+  Check
 } from "lucide-react";
 import { Course, Teacher, AdminConfig, parseCurriculum } from "../lib/types";
 import EnrollmentForm from "./EnrollmentForm";
@@ -25,11 +27,22 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
   const [activeTab, setActiveTab] = useState<"about" | "curriculum" | "teachers">("about");
   const [expandedWeek, setExpandedWeek] = useState<number | null>(0);
   const [showEnrollForm, setShowEnrollForm] = useState(false);
+  const [copied, setCopied] = useState(false);
   
   const [selectedSubjectIdx, setSelectedSubjectIdx] = useState(0);
   const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
   const courseTeachers = course.teachers || [];
+
+  const handleShareLink = () => {
+    const shareUrl = window.location.href;
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      });
+    }
+  };
 
   const toggleWeek = (index: number) => {
     setExpandedWeek(expandedWeek === index ? null : index);
@@ -41,14 +54,35 @@ export default function CourseDetailView({ course, config, onBack }: CourseDetai
     <div className="bg-[#fafdfb] min-h-screen pt-28 pb-20 font-sans" id="course-detail-view">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Back Link indicator */}
-        <button
-          onClick={onBack}
-          className="inline-flex items-center space-x-1.5 text-primary hover:text-secondary font-bold text-sm mb-8 transition-colors group cursor-pointer"
-        >
-          <ArrowLeft className="h-4 p-0.5 w-4 transition-transform group-hover:-translate-x-1" />
-          <span>কোর্সসমূহে ফিরে যান</span>
-        </button>
+        {/* Top Header Controls: Back & Share Link */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={onBack}
+            className="inline-flex items-center space-x-1.5 text-primary hover:text-secondary font-bold text-sm transition-colors group cursor-pointer"
+          >
+            <ArrowLeft className="h-4 p-0.5 w-4 transition-transform group-hover:-translate-x-1" />
+            <span>কোর্সসমূহে ফিরে যান</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleShareLink}
+            className="inline-flex items-center space-x-1.5 bg-primary/5 hover:bg-primary/10 text-primary border border-primary/15 font-bold text-xs px-3.5 py-2 rounded-xl transition-all cursor-pointer shadow-2xs"
+            title="কোর্সের লিংক কপি করুন"
+          >
+            {copied ? (
+              <>
+                <Check className="h-3.5 w-3.5 text-green-600" />
+                <span className="text-green-700">লিংক কপি হয়েছে!</span>
+              </>
+            ) : (
+              <>
+                <Share2 className="h-3.5 w-3.5" />
+                <span>কোর্স শেয়ার করুন</span>
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Master layout details */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
