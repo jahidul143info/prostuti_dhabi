@@ -42,6 +42,7 @@ import ResourcesSection from "./components/ResourcesSection";
 import FeedbackSection from "./components/FeedbackSection";
 import Footer from "./components/Footer";
 import CourseDetailView from "./components/CourseDetailView";
+import BrandLogo from "./components/BrandLogo";
 
 // Admin Panel Components
 import AdminSidebar from "./components/admin/AdminSidebar";
@@ -726,14 +727,14 @@ export default function App() {
               <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
 
               <div className="max-w-md w-full bg-slate-900 border border-white/5 shadow-2xl rounded-3xl p-8 space-y-6 relative z-10 text-white" id="admin-login-card">
-                <div className="text-center space-y-2">
-                  <div className="mx-auto bg-secondary p-3.5 rounded-full text-dark w-14 h-14 flex items-center justify-center shadow-[0_0_20px_rgba(212,160,23,0.3)]">
-                    <Lock className="h-7 w-7" />
+                <div className="flex flex-col items-center text-center space-y-3">
+                  <BrandLogo size="lg" theme="dark" id="login-brand-logo" />
+                  <div>
+                    <h2 className="text-xl font-black tracking-tight text-white/90" id="login-title">ম্যানেজমেন্ট কনসোল</h2>
+                    <p className="text-white/60 text-xs sm:text-sm mt-1">
+                      নিরাপদ পাসওয়ার্ড প্রদান করে অ্যাডমিন প্যানেলে প্রবেশ করুন।
+                    </p>
                   </div>
-                  <h2 className="text-2xl font-black tracking-tight" id="login-title">ম্যানেজমেন্ট কনসোল</h2>
-                  <p className="text-white/60 text-xs sm:text-sm">
-                    নিরাপদ পাসওয়ার্ড প্রদান করে অ্যাডমিন প্যানেলে প্রবেশ করুন।
-                  </p>
                 </div>
 
                 <form onSubmit={handleAdminLogin} className="space-y-4">
@@ -1436,7 +1437,7 @@ export default function App() {
                 </div>
                 <div>
                   <h3 className="font-black text-dark text-base sm:text-lg tracking-tight">সকল সক্রিয় নোটিশ ও বিজ্ঞপ্তি</h3>
-                  <p className="text-[10px] text-gray-400 font-sans">Prostuti Dhabi Notice Board</p>
+                  <p className="text-[10px] text-gray-400 font-sans">Accounting Hunters Notice Board</p>
                 </div>
               </div>
               <button

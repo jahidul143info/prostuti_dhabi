@@ -125,7 +125,7 @@ export default function FeedbackSection({ courses }: FeedbackSectionProps) {
             </span>
           </h2>
           <p className="text-gray-500 text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-            ইতিমধ্যে প্রস্তুতি ঢাবির সাহায্যে সফল হওয়া শিক্ষার্থীরা আমাদের সেবা ও মেন্টরশিপ সম্পর্কে কী বলছে তা দেখে নিন।
+            ইতিমধ্যে Accounting Hunters-এর সাহায্যে সফল হওয়া শিক্ষার্থীরা আমাদের সেবা ও মেন্টরশিপ সম্পর্কে কী বলছে তা দেখে নিন।
           </p>
         </div>
 
@@ -280,7 +280,7 @@ export default function FeedbackSection({ courses }: FeedbackSectionProps) {
                         rows={3}
                         value={comment}
                         onChange={(e) => setComment(e.target.value)}
-                        placeholder="প্রস্তুতি ঢাবির ক্লাস এবং সার্ভিস আপনার প্রস্তুতিকে কীভাবে উন্নত করেছে তা বিস্তারিত লিখুন..."
+                        placeholder="Accounting Hunters-এর ক্লাস এবং সার্ভিস আপনার প্রস্তুতিকে কীভাবে উন্নত করেছে তা বিস্তারিত লিখুন..."
                         className="w-full px-4 py-3 border border-primary/10 rounded-xl outline-none focus:border-primary transition-all text-sm leading-relaxed"
                       />
                     </div>

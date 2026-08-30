@@ -118,7 +118,7 @@ export default function EnrollmentForm({ course, config, onSuccess, onCancel }: 
         <div className="pt-2">
           <span className="inline-flex items-center space-x-1.5 bg-secondary/15 text-primary text-xs font-extrabold px-3 py-1.5 rounded-full">
             <Sparkles className="h-3.5 w-3.5" />
-            <span>প্রস্তুতি ঢাবিতে আপনাকে স্বাগতম!</span>
+            <span>Accounting Hunters-এ আপনাকে স্বাগতম!</span>
           </span>
         </div>
       </div>

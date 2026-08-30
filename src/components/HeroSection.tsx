@@ -57,8 +57,8 @@ export default function HeroSection({ config, onSeeCourses, onSeeAbout }: HeroSe
             id="hero-badge-container"
           >
             <span className="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse" />
-            <span className="text-secondary text-xs sm:text-sm font-extrabold tracking-wider uppercase font-sans">
-              ঢাকা বিশ্ববিদ্যালয় ভর্তি প্রস্তুতি ২০২৬
+            <span className="text-secondary text-xs sm:text-sm font-extrabold tracking-wide font-sans">
+              ঢাকা বিশ্ববিদ্যালয়সহ অন্যান্য বিশ্ববিদ্যালয়ের পূর্ণাঙ্গ ভর্তি প্রস্তুতি
             </span>
           </motion.div>
 

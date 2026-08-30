@@ -12,6 +12,7 @@ import {
   Link,
   MessageSquare
 } from "lucide-react";
+import BrandLogo from "../BrandLogo";
 
 interface AdminSidebarProps {
   currentTab: string;
@@ -37,20 +38,11 @@ export default function AdminSidebar({ currentTab, setTab, onLogout, statsPendin
     <aside id="admin-sidebar" className="bg-dark text-white w-full md:w-64 min-h-screen border-r border-white/5 flex flex-col justify-between p-6">
       {/* Upper Logo header */}
       <div className="space-y-8">
-        <div className="flex items-center space-x-2.5 border-b border-white/5 pb-6">
-          <img
-            src="https://ziydyorjdctwisatbvwp.supabase.co/storage/v1/object/public/others/photo_2026-05-22_00-09-37.jpg"
-            alt="Logo"
-            referrerPolicy="no-referrer"
-            className="h-8 w-8 object-cover rounded-lg border border-white/10"
-          />
-          <div>
-            <h2 className="font-extrabold text-sm sm:text-base text-white leading-none">
-              ম্যানেজমেন্ট পোর্টাল
-            </h2>
-            <p className="text-[10px] text-secondary font-sans uppercase tracking-[0.12em] mt-1">
-              PROSTUTI DHABI
-            </p>
+        <div className="border-b border-white/5 pb-5">
+          <BrandLogo size="sm" theme="dark" id="admin-brand-logo" />
+          <div className="mt-2.5 flex items-center justify-between px-1">
+            <span className="text-[11px] font-bold text-gray-400 font-sans">অ্যাডমিন ড্যাশবোর্ড</span>
+            <span className="text-[9px] bg-red-600/20 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-full font-sans uppercase tracking-wider font-extrabold">Console</span>
           </div>
         </div>
 

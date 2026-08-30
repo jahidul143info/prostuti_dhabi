@@ -1,6 +1,7 @@
 import React from "react";
 import { GraduationCap, ArrowUp, Lock, Mail } from "lucide-react";
 import { AdminConfig } from "../lib/types";
+import BrandLogo from "./BrandLogo";
 
 interface FooterProps {
   setView: (view: string) => void;
@@ -33,19 +34,11 @@ export default function Footer({ setView, config }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 pb-12 mb-12 border-b border-white/5">
           {/* Logo brand & description */}
           <div className="md:col-span-6 space-y-4">
-            <div className="flex items-center space-x-2.5">
-              <img
-                src="https://ziydyorjdctwisatbvwp.supabase.co/storage/v1/object/public/others/photo_2026-05-22_00-09-37.jpg"
-                alt="Logo"
-                referrerPolicy="no-referrer"
-                className="h-8 w-8 object-cover rounded-lg border border-white/10"
-              />
-              <span className="text-xl font-bold tracking-tight">
-                প্রস্তুতি <span className="text-secondary font-extrabold">ঢাবি</span>
-              </span>
+            <div className="cursor-pointer inline-block" onClick={() => setView("home")}>
+              <BrandLogo size="md" theme="dark" id="footer-brand-logo" />
             </div>
             <p className="text-white/60 text-xs sm:text-sm max-w-sm leading-relaxed">
-              ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষায় সাফল্যের এক নির্ভরযোগ্য সহযাত্রী। দেশসেরা গবেষক ও শিক্ষকমণ্ডলী দ্বারা প্রণীত অনন্য এডটেক প্ল্যাটফর্ম।
+              Accounting Hunters — ঢাকা বিশ্ববিদ্যালয় ভর্তি পরীক্ষায় সাফল্যের এক নির্ভরযোগ্য সহযাত্রী। দেশসেরা গবেষক ও শিক্ষকমণ্ডলী দ্বারা প্রণীত অনন্য এডটেক প্ল্যাটফর্ম।
             </p>
           </div>
 
@@ -94,7 +87,7 @@ export default function Footer({ setView, config }: FooterProps) {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-white/40">
           <div className="flex flex-col items-center sm:items-start space-y-1">
             <p id="copyright-label">
-              © {currentYear} প্রস্তুতি ঢাবি। সর্বস্বত্ব সংরক্ষিত।
+              © {currentYear} Accounting Hunters। সর্বস্বত্ব সংরক্ষিত।
             </p>
             <div className="mt-2.5 flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-gradient-to-r from-secondary/15 via-white/[0.04] to-secondary/10 border border-secondary/25 shadow-[0_0_15px_rgba(242,180,46,0.12)] hover:shadow-[0_0_20px_rgba(242,180,46,0.22)] hover:border-secondary/45 transition-all duration-300">
